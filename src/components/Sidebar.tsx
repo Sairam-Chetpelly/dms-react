@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Folder, Tag } from '../types';
 import { foldersAPI, tagsAPI } from '../services/api';
-import { FolderIcon, Star, Share, Plus, ChevronRight, ChevronDown, HardDrive } from 'lucide-react';
+import { FolderIcon, Star, Share, Plus, ChevronRight, ChevronDown, HardDrive, FileText } from 'lucide-react';
 
 interface SidebarProps {
   currentFolder: string | null;
   onFolderChange: (folderId: string | null) => void;
-  onFilterChange: (filter: 'all' | 'starred' | 'shared' | 'mydrives') => void;
-  currentFilter: 'all' | 'starred' | 'shared' | 'mydrives';
+  onFilterChange: (filter: 'all' | 'starred' | 'shared' | 'mydrives' | 'invoices') => void;
+  currentFilter: 'all' | 'starred' | 'shared' | 'mydrives' | 'invoices';
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -105,57 +105,68 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-full overflow-y-auto">
+    <div className="w-64 bg-gradient-to-b from-slate-50 to-slate-100 h-full overflow-y-auto shadow-lg">
       <div className="p-4">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Documents</h2>
+        <div className="mb-6">
+          <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Documents</h2>
+        </div>
         
         {/* Quick Filters */}
-        <div className="space-y-1 mb-6">
-          <button
-            onClick={() => onFilterChange('all')}
-            className={`w-full flex items-center px-2 py-2 text-sm rounded ${
-              currentFilter === 'all' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700 hover:bg-gray-100'
+        <div className="space-y-1 mb-8">
+          <div
+            className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 ${
+              currentFilter === 'all' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
             }`}
+            onClick={() => onFilterChange('all')}
           >
             <FolderIcon className="w-4 h-4 mr-2" />
-            All Documents
-          </button>
-          <button
-            onClick={() => onFilterChange('starred')}
-            className={`w-full flex items-center px-2 py-2 text-sm rounded ${
-              currentFilter === 'starred' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700 hover:bg-gray-100'
+            <span>All Documents</span>
+          </div>
+          <div
+            className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 ${
+              currentFilter === 'starred' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
             }`}
+            onClick={() => onFilterChange('starred')}
           >
             <Star className="w-4 h-4 mr-2" />
-            Starred
-          </button>
-          <button
-            onClick={() => onFilterChange('shared')}
-            className={`w-full flex items-center px-2 py-2 text-sm rounded ${
-              currentFilter === 'shared' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700 hover:bg-gray-100'
+            <span>Starred</span>
+          </div>
+          <div
+            className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 ${
+              currentFilter === 'shared' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
             }`}
+            onClick={() => onFilterChange('shared')}
           >
             <Share className="w-4 h-4 mr-2" />
-            Shared
-          </button>
-          <button
-            onClick={() => onFilterChange('mydrives')}
-            className={`w-full flex items-center px-2 py-2 text-sm rounded ${
-              currentFilter === 'mydrives' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700 hover:bg-gray-100'
+            <span>Shared</span>
+          </div>
+          <div
+            className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 ${
+              currentFilter === 'mydrives' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
             }`}
+            onClick={() => onFilterChange('mydrives')}
           >
             <HardDrive className="w-4 h-4 mr-2" />
-            My Drives
-          </button>
+            <span>My Drives</span>
+          </div>
+          <div
+            className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 ${
+              currentFilter === 'invoices' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
+            }`}
+            onClick={() => onFilterChange('invoices')}
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            <span>Invoice Records</span>
+          </div>
         </div>
 
         {/* Folders */}
-        <div className="mb-6">
+        <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-900">Folders</h3>
+            <h3 className="text-sm font-semibold text-gray-800">Folders</h3>
             <button
               onClick={() => setShowNewFolderForm(true)}
-              className="p-1 text-gray-400 hover:text-gray-600"
+              className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-black hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 shadow-md hover:shadow-lg"
             >
               <Plus className="w-4 h-4" />
             </button>

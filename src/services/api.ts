@@ -35,6 +35,12 @@ export const documentsAPI = {
   getViewUrl: (id: string) => `${API_BASE_URL}/documents/${id}/view`,
 };
 
+export const invoicesAPI = {
+  create: (data: any) => api.post('/invoices', data),
+  getAll: (params?: any) => api.get('/invoices', { params }),
+  export: (params?: any) => api.get('/invoices/export', { params, responseType: 'blob' }),
+};
+
 export const foldersAPI = {
   create: (name: string, parent?: string) =>
     api.post<Folder>('/folders', { name, parent }),

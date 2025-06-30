@@ -49,53 +49,54 @@ const DocumentGrid: React.FC<DocumentGridProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" style={{ gap: '10px' }}>
       {documents.map((document) => (
         <div
           key={document._id}
-          className="relative group bg-white p-6 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all"
+          className="relative group p-6 rounded-xl card-hover glass-effect card-gradient overflow-hidden"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-gray-400">
+          <div className="absolute inset-0 shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="flex items-center justify-between mb-4 relative z-10">
+            <div className="text-indigo-600 icon-bounce p-4 bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 rounded-2xl border-2 border-indigo-200 shadow-md">
               {getFileIcon(document.mimeType)}
             </div>
-            <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-300 relative z-10">
               <button
                 onClick={() => onStar(document._id, !document.isStarred)}
-                className={`p-1 rounded hover:bg-gray-100 ${
-                  document.isStarred ? 'text-yellow-500' : 'text-gray-400'
+                className={`p-2 rounded-full hover:bg-gray-100 transition-all ${
+                  document.isStarred ? 'text-yellow-500 pulse-animation' : 'text-gray-400'
                 }`}
               >
                 <Star className="w-4 h-4" fill={document.isStarred ? 'currentColor' : 'none'} />
               </button>
               <button
                 onClick={() => onView(document)}
-                className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-indigo-600 transition-all"
               >
                 <Eye className="w-4 h-4" />
               </button>
               <button
                 onClick={() => onShare(document)}
-                className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-all"
               >
                 <Share className="w-4 h-4" />
               </button>
               <button
                 onClick={() => onDownload(document._id)}
-                className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-green-600 transition-all"
               >
                 <Download className="w-4 h-4" />
               </button>
               <button
                 onClick={() => onDelete(document._id)}
-                className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-red-600"
+                className="p-2 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
           </div>
           
-          <div className="min-h-0">
+          <div className="min-h-0 relative z-10">
             <h3 
               className="text-sm font-medium text-gray-900 truncate cursor-pointer hover:text-indigo-600" 
               title={document.originalName}
