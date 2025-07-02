@@ -202,7 +202,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
                     {new Date(invoice.invoiceDate).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${invoice.invoiceValue.toLocaleString()}
+                    {invoice.invoiceValue.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {invoice.invoiceQty}
