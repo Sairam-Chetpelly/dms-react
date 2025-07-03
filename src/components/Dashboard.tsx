@@ -8,6 +8,7 @@ import UploadModal from './UploadModal';
 import ShareModal from './ShareModal';
 import FileViewModal from './FileViewModal';
 import InvoiceTable from './InvoiceTable';
+import Chatbot from './Chatbot';
 import { Search, Upload, LogOut, User } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -210,6 +211,8 @@ const Dashboard: React.FC = () => {
         onUpload={loadDocuments}
         currentFolder={currentFolder}
       />
+      
+      <Chatbot />
     </div>
   );
 };

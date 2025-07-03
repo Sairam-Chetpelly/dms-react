@@ -27,7 +27,6 @@ interface Message {
 const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [pdfModal, setPdfModal] = useState<{isOpen: boolean, url: string, name: string}>({isOpen: false, url: '', name: ''});
-  console.log('Chatbot component rendered, isOpen:', isOpen);
   const [messages, setMessages] = useState<Message[]>([
     { type: 'bot', content: 'Hi! I can help you search through your PDF documents. What would you like to find?' }
   ]);
@@ -52,22 +51,43 @@ const Chatbot: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/documents/chat`,
-        { query: userMessage },
+      
+      // Try PDF search first
+      try {
+        const pdfResponse = await axios.post(
+          `${process.env.REACT_APP_API_URL}/documents/chat`,
+          { query: userMessage },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const pdfData: ChatResponse = pdfResponse.data;
+        if (pdfData.results && pdfData.results.length > 0) {
+          setMessages(prev => [...prev, { 
+            type: 'bot', 
+            content: pdfData.message,
+            results: pdfData.results 
+          }]);
+          return;
+        }
+      } catch (pdfError) {
+        console.log('PDF search failed, trying chatbot');
+      }
+      
+      // Fallback to AI chatbot
+      const chatResponse = await axios.post(
+        `${process.env.REACT_APP_API_URL}/chatbot/chat`,
+        { message: userMessage },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const data: ChatResponse = response.data;
       setMessages(prev => [...prev, { 
         type: 'bot', 
-        content: data.message,
-        results: data.results 
+        content: chatResponse.data.response
       }]);
     } catch (error) {
       setMessages(prev => [...prev, { 
         type: 'bot', 
-        content: 'Error searching PDFs. Please try again.' 
+        content: 'Error processing your request. Please try again.' 
       }]);
     } finally {
       setLoading(false);
@@ -84,10 +104,7 @@ const Chatbot: React.FC = () => {
   return (
     <>
       <button
-        onClick={() => {
-          console.log('Chatbot button clicked');
-          setIsOpen(prev => !prev);
-        }}
+        onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-black p-4 rounded-full shadow-lg transition-colors z-50"
         style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999 }}
       >
@@ -96,17 +113,17 @@ const Chatbot: React.FC = () => {
 
       {isOpen && (
         <div 
-          className="fixed bottom-20 right-6 w-96 h-96 bg-white border border-gray-300 rounded-lg shadow-xl flex flex-col z-50"
+          className="fixed bottom-20 right-6 w-80 h-96 bg-white border border-gray-300 rounded-lg shadow-xl flex flex-col z-50"
           style={{ position: 'fixed', bottom: '80px', right: '24px', zIndex: 9999, display: 'flex' }}
         >
           <div className="bg-blue-600 text-black p-4 rounded-t-lg">
             <h3 className="font-semibold">PDF Search Assistant</h3>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2" style={{ maxHeight: '280px' }}>
             {messages.map((message, index) => (
               <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-xs p-3 rounded-lg ${
+                <div className={`max-w-[250px] px-2 rounded-lg text-sm ${
                   message.type === 'user' 
                     ? 'bg-blue-600 text-black' 
                     : 'bg-gray-100 text-gray-800'
@@ -122,7 +139,7 @@ const Chatbot: React.FC = () => {
                             <button
                               onClick={() => setPdfModal({
                                 isOpen: true,
-                                url: `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/documents/${result.document._id}/view?token=${localStorage.getItem('token')}`,
+                                url: `${process.env.REACT_APP_API_URL}/documents/${result.document._id}/view?token=${localStorage.getItem('token')}`,
                                 name: result.document.originalName
                               })}
                               className="text-xs font-medium truncate text-blue-600 hover:underline cursor-pointer"
