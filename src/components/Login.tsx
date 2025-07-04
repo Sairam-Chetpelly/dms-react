@@ -41,10 +41,14 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-sm"></div>
+      <div className="absolute top-10 left-10 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+      <div className="absolute top-10 right-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+      <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      <div className="max-w-md w-full space-y-8 modern-card p-10 relative z-10 animate-float">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-4xl font-bold gradient-text">
             {isLogin ? 'Sign in to your account' : 'Create your account'}
           </h2>
         </div>
@@ -56,7 +60,7 @@ const Login: React.FC = () => {
                   name="name"
                   type="text"
                   required
-                  className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="modern-input w-full"
                   placeholder="Full name"
                   value={formData.name}
                   onChange={handleChange}
@@ -68,9 +72,7 @@ const Login: React.FC = () => {
                 name="email"
                 type="email"
                 required
-                className={`relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 ${
-                  isLogin ? 'rounded-t-md' : ''
-                } focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                className="relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors mt-3"
                 placeholder="Email address"
                 value={formData.email}
                 onChange={handleChange}
@@ -81,7 +83,7 @@ const Login: React.FC = () => {
                 name="password"
                 type="password"
                 required
-                className={`relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 ${isLogin ? 'rounded-b-md' : ''} focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                className="relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors mt-3"
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
@@ -93,7 +95,7 @@ const Login: React.FC = () => {
                   <select
                     name="role"
                     required
-                    className="relative block w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="relative block w-full px-4 py-3 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors mt-3"
                     value={formData.role}
                     onChange={handleChange}
                   >
@@ -106,7 +108,7 @@ const Login: React.FC = () => {
                   <select
                     name="department"
                     required
-                    className="relative block w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="relative block w-full px-4 py-3 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors mt-3"
                     value={formData.department}
                     onChange={handleChange}
                   >
@@ -129,7 +131,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors shadow-sm"
             >
               {loading ? 'Loading...' : isLogin ? 'Sign in' : 'Sign up'}
             </button>

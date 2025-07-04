@@ -10,6 +10,8 @@ import FileViewModal from './FileViewModal';
 import InvoiceTable from './InvoiceTable';
 import AdminPanel from './AdminPanel';
 import Chatbot from './Chatbot';
+import FolderCreateModal from './FolderCreateModal';
+import FolderShareModal from './FolderShareModal';
 import { Search, Upload, LogOut, User, Settings } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -23,6 +25,8 @@ const Dashboard: React.FC = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [shareDocument, setShareDocument] = useState<Document | null>(null);
   const [viewDocument, setViewDocument] = useState<Document | null>(null);
+  const [showFolderCreateModal, setShowFolderCreateModal] = useState(false);
+  const [shareFolderData, setShareFolderData] = useState<any>(null);
 
   const loadDocuments = async () => {
     try {
@@ -123,15 +127,17 @@ const Dashboard: React.FC = () => {
         onFolderChange={setCurrentFolder}
         onFilterChange={setCurrentFilter}
         currentFilter={currentFilter}
+        onCreateFolder={() => setShowFolderCreateModal(true)}
+        onShareFolder={setShareFolderData}
       />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden bg-white/80 backdrop-blur-sm">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <header className="modern-card border-b border-white/20 px-6 py-4 shadow-lg backdrop-blur-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-semibold text-gray-900">
-                DMS
+              <h1 className="text-2xl font-bold gradient-text">
+                📄 DMS
               </h1>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -149,10 +155,10 @@ const Dashboard: React.FC = () => {
               {user?.role === 'admin' && (
                 <button
                   onClick={() => setCurrentFilter('admin')}
-                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md ${
+                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg transition-colors ${
                     currentFilter === 'admin'
-                      ? 'text-white bg-indigo-600'
-                      : 'text-indigo-600 bg-white border-indigo-600 hover:bg-indigo-50'
+                      ? 'text-white bg-blue-600 shadow-sm'
+                      : 'text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100'
                   }`}
                 >
                   <Settings className="w-4 h-4 mr-2" />
@@ -162,7 +168,7 @@ const Dashboard: React.FC = () => {
               
               <button
                 onClick={() => setShowUploadModal(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-sm"
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Upload
@@ -232,6 +238,20 @@ const Dashboard: React.FC = () => {
         onClose={() => setShowUploadModal(false)}
         onUpload={loadDocuments}
         currentFolder={currentFolder}
+      />
+      
+      <FolderCreateModal
+        isOpen={showFolderCreateModal}
+        onClose={() => setShowFolderCreateModal(false)}
+        onCreate={loadDocuments}
+        currentFolder={currentFolder}
+      />
+      
+      <FolderShareModal
+        folder={shareFolderData}
+        isOpen={!!shareFolderData}
+        onClose={() => setShareFolderData(null)}
+        onShare={loadDocuments}
       />
       
       <Chatbot />

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Folder, Tag } from '../types';
 import { foldersAPI, tagsAPI, adminAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import FolderShareModal from './FolderShareModal';
 import { FolderIcon, Star, Share, Plus, ChevronRight, ChevronDown, HardDrive, FileText, Users, Settings } from 'lucide-react';
 
 interface SidebarProps {
@@ -10,6 +9,8 @@ interface SidebarProps {
   onFolderChange: (folderId: string | null) => void;
   onFilterChange: (filter: 'all' | 'starred' | 'shared' | 'mydrives' | 'invoices' | 'admin') => void;
   currentFilter: 'all' | 'starred' | 'shared' | 'mydrives' | 'invoices' | 'admin';
+  onCreateFolder: () => void;
+  onShareFolder: (folder: any) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -17,14 +18,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   onFolderChange,
   onFilterChange,
   currentFilter,
+  onCreateFolder,
+  onShareFolder,
 }) => {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
-  const [showNewFolderForm, setShowNewFolderForm] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
-  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
-  const [shareFolder, setShareFolder] = useState<Folder | null>(null);
+
   const { user } = useAuth();
   
   const [allDepartments, setAllDepartments] = useState<any[]>([]);
@@ -65,33 +65,9 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const handleCreateFolder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newFolderName.trim()) return;
 
-    try {
-      console.log('Creating folder:', {
-        name: newFolderName,
-        parent: currentFolder,
-        departmentAccess: selectedDepartments
-      });
-      
-      const response = await foldersAPI.create(newFolderName, currentFolder || undefined, selectedDepartments);
-      console.log('Folder created:', response.data);
-      
-      setNewFolderName('');
-      setSelectedDepartments([]);
-      setShowNewFolderForm(false);
-      await loadFolders();
-    } catch (error) {
-      console.error('Error creating folder:', error);
-      alert('Failed to create folder. Please try again.');
-    }
-  };
   
-  const handleShareComplete = () => {
-    loadFolders();
-  };
+
 
   const toggleFolder = (folderId: string) => {
     const newExpanded = new Set(expandedFolders);
@@ -147,7 +123,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setShareFolder(folder);
+                onShareFolder(folder);
               }}
               className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
               title="Share with departments"
@@ -163,17 +139,17 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <div className="w-64 bg-gradient-to-b from-slate-50 to-slate-100 h-full overflow-y-auto shadow-lg">
+    <div className="w-64 glass-card h-full overflow-y-auto border-r border-white/20 backdrop-blur-xl">
       <div className="p-4">
         <div className="mb-6">
-          <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Documents</h2>
+          <h2 className="text-2xl font-bold gradient-text animate-pulse-slow">📁 Documents</h2>
         </div>
         
         {/* Quick Filters */}
         <div className="space-y-1 mb-8">
           <div
-            className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 ${
-              currentFilter === 'all' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
+            className={`flex items-center px-4 py-3 text-sm rounded-xl cursor-pointer transition-all duration-300 hover-lift ${
+              currentFilter === 'all' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' : 'text-gray-700 hover:bg-white/50'
             }`}
             onClick={() => onFilterChange('all')}
           >
@@ -181,8 +157,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             <span>All Documents</span>
           </div>
           <div
-            className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 ${
-              currentFilter === 'starred' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
+            className={`flex items-center px-3 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
+              currentFilter === 'starred' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-700 hover:bg-gray-50'
             }`}
             onClick={() => onFilterChange('starred')}
           >
@@ -190,8 +166,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             <span>Starred</span>
           </div>
           <div
-            className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 ${
-              currentFilter === 'shared' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
+            className={`flex items-center px-3 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
+              currentFilter === 'shared' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-700 hover:bg-gray-50'
             }`}
             onClick={() => onFilterChange('shared')}
           >
@@ -199,8 +175,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             <span>Shared</span>
           </div>
           <div
-            className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 ${
-              currentFilter === 'mydrives' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
+            className={`flex items-center px-3 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
+              currentFilter === 'mydrives' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-700 hover:bg-gray-50'
             }`}
             onClick={() => onFilterChange('mydrives')}
           >
@@ -208,8 +184,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             <span>My Drives</span>
           </div>
           <div
-            className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 ${
-              currentFilter === 'invoices' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
+            className={`flex items-center px-3 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
+              currentFilter === 'invoices' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-700 hover:bg-gray-50'
             }`}
             onClick={() => onFilterChange('invoices')}
           >
@@ -218,8 +194,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
           {user?.role === 'admin' && (
             <div
-              className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 ${
-                currentFilter === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
+              className={`flex items-center px-3 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
+                currentFilter === 'admin' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-700 hover:bg-gray-50'
               }`}
               onClick={() => onFilterChange('admin')}
             >
@@ -235,69 +211,15 @@ const Sidebar: React.FC<SidebarProps> = ({
             <h3 className="text-sm font-semibold text-gray-800">Folders</h3>
             {(user?.role === 'admin' || user?.role === 'manager') && (
               <button
-                onClick={() => setShowNewFolderForm(true)}
-                className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-black hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 shadow-md hover:shadow-lg"
+                onClick={onCreateFolder}
+                className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 animate-float"
               >
                 <Plus className="w-4 h-4" />
               </button>
             )}
           </div>
           
-          {showNewFolderForm && (
-            <form onSubmit={handleCreateFolder} className="mb-2">
-              <input
-                type="text"
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                placeholder="Folder name"
-                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                autoFocus
-              />
-              {(user?.role === 'admin' || user?.role === 'manager') && (
-                <div className="mt-2">
-                  <div className="text-xs text-gray-600 mb-1">Share with departments:</div>
-                  <div className="space-y-1">
-                    {allDepartments.map(dept => (
-                      <label key={dept._id} className="flex items-center text-xs">
-                        <input
-                          type="checkbox"
-                          checked={selectedDepartments.includes(dept._id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedDepartments([...selectedDepartments, dept._id]);
-                            } else {
-                              setSelectedDepartments(selectedDepartments.filter(d => d !== dept._id));
-                            }
-                          }}
-                          className="mr-1"
-                        />
-                        <span>{dept.displayName}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="flex space-x-1 mt-2">
-                <button
-                  type="submit"
-                  className="px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700"
-                >
-                  Create
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowNewFolderForm(false);
-                    setNewFolderName('');
-                    setSelectedDepartments([]);
-                  }}
-                  className="px-2 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
+
 
           <div className="space-y-1">
             <div
@@ -333,12 +255,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
       
-      <FolderShareModal
-        folder={shareFolder}
-        isOpen={!!shareFolder}
-        onClose={() => setShareFolder(null)}
-        onShare={handleShareComplete}
-      />
+
     </div>
   );
 };
