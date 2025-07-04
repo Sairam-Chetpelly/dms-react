@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { adminAPI } from '../services/api';
 
 const Login: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -8,12 +9,28 @@ const Login: React.FC = () => {
     email: '',
     password: '',
     role: 'employee' as 'admin' | 'manager' | 'employee',
-    department: 'hr' as 'hr' | 'finance' | 'it' | 'marketing' | 'operations',
+    department: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [departments, setDepartments] = useState<any[]>([]);
 
   const { login, register } = useAuth();
+
+  useEffect(() => {
+    if (!isLogin) {
+      loadDepartments();
+    }
+  }, [isLogin]);
+
+  const loadDepartments = async () => {
+    try {
+      const response = await adminAPI.getDepartments();
+      setDepartments(response.data);
+    } catch (error) {
+      console.error('Error loading departments:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,11 +129,12 @@ const Login: React.FC = () => {
                     value={formData.department}
                     onChange={handleChange}
                   >
-                    <option value="hr">HR</option>
-                    <option value="finance">Finance</option>
-                    <option value="it">IT</option>
-                    <option value="marketing">Marketing</option>
-                    <option value="operations">Operations</option>
+                    <option value="">Select Department</option>
+                    {departments.map(dept => (
+                      <option key={dept._id} value={dept._id}>
+                        {dept.displayName}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </>
