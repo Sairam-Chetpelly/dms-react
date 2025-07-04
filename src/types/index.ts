@@ -2,7 +2,8 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: 'admin' | 'manager' | 'employee';
+  department: 'hr' | 'finance' | 'it' | 'marketing' | 'operations';
 }
 
 export interface Document {
@@ -34,6 +35,7 @@ export interface Folder {
   owner: User;
   isShared: boolean;
   sharedWith: User[];
+  departmentAccess: string[];
   createdAt: string;
   updatedAt: string;
 }

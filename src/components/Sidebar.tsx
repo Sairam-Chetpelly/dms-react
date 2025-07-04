@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Folder, Tag } from '../types';
 import { foldersAPI, tagsAPI } from '../services/api';
-import { FolderIcon, Star, Share, Plus, ChevronRight, ChevronDown, HardDrive, FileText } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { FolderIcon, Star, Share, Plus, ChevronRight, ChevronDown, HardDrive, FileText, Users, Settings } from 'lucide-react';
 
 interface SidebarProps {
   currentFolder: string | null;
   onFolderChange: (folderId: string | null) => void;
-  onFilterChange: (filter: 'all' | 'starred' | 'shared' | 'mydrives' | 'invoices') => void;
-  currentFilter: 'all' | 'starred' | 'shared' | 'mydrives' | 'invoices';
+  onFilterChange: (filter: 'all' | 'starred' | 'shared' | 'mydrives' | 'invoices' | 'admin') => void;
+  currentFilter: 'all' | 'starred' | 'shared' | 'mydrives' | 'invoices' | 'admin';
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -21,6 +22,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [showNewFolderForm, setShowNewFolderForm] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [showDepartmentShare, setShowDepartmentShare] = useState<string | null>(null);
+  const { user } = useAuth();
+  
+  const departments = ['hr', 'finance', 'it', 'marketing', 'operations'];
 
   useEffect(() => {
     loadFolders();
@@ -50,12 +56,23 @@ const Sidebar: React.FC<SidebarProps> = ({
     if (!newFolderName.trim()) return;
 
     try {
-      await foldersAPI.create(newFolderName, currentFolder || undefined);
+      await foldersAPI.create(newFolderName, currentFolder || undefined, selectedDepartments);
       setNewFolderName('');
+      setSelectedDepartments([]);
       setShowNewFolderForm(false);
       loadFolders();
     } catch (error) {
       console.error('Error creating folder:', error);
+    }
+  };
+  
+  const handleShareDepartment = async (folderId: string, departments: string[]) => {
+    try {
+      await foldersAPI.shareDepartment(folderId, departments);
+      setShowDepartmentShare(null);
+      loadFolders();
+    } catch (error) {
+      console.error('Error sharing folder:', error);
     }
   };
 
@@ -76,29 +93,69 @@ const Sidebar: React.FC<SidebarProps> = ({
 
     return childFolders.map(folder => (
       <div key={folder._id}>
-        <div
-          className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 ${
-            currentFolder === folder._id ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
-          }`}
-          style={{ paddingLeft: `${(level + 1) * 12}px` }}
-          onClick={() => onFolderChange(folder._id)}
-        >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleFolder(folder._id);
-            }}
-            className="mr-1 p-0.5 hover:bg-gray-200 rounded"
+        <div className="flex items-center justify-between group">
+          <div
+            className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 flex-1 ${
+              currentFolder === folder._id ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
+            }`}
+            style={{ paddingLeft: `${(level + 1) * 12}px` }}
+            onClick={() => onFolderChange(folder._id)}
           >
-            {expandedFolders.has(folder._id) ? (
-              <ChevronDown className="w-3 h-3" />
-            ) : (
-              <ChevronRight className="w-3 h-3" />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFolder(folder._id);
+              }}
+              className="mr-1 p-0.5 hover:bg-gray-200 rounded"
+            >
+              {expandedFolders.has(folder._id) ? (
+                <ChevronDown className="w-3 h-3" />
+              ) : (
+                <ChevronRight className="w-3 h-3" />
+              )}
+            </button>
+            <FolderIcon className="w-4 h-4 mr-2" />
+            <span className="truncate">{folder.name}</span>
+            {folder.departmentAccess && folder.departmentAccess.length > 0 && (
+              <div title={`Shared with: ${folder.departmentAccess.join(', ')}`}>
+                <Users className="w-3 h-3 ml-1 text-blue-500" />
+              </div>
             )}
-          </button>
-          <FolderIcon className="w-4 h-4 mr-2" />
-          <span className="truncate">{folder.name}</span>
+          </div>
+          {(user?.role === 'admin' || user?.role === 'manager') && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDepartmentShare(showDepartmentShare === folder._id ? null : folder._id);
+              }}
+              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
+              title="Share with departments"
+            >
+              <Share className="w-3 h-3" />
+            </button>
+          )}
         </div>
+        {showDepartmentShare === folder._id && (
+          <div className="ml-4 p-2 bg-gray-50 rounded text-xs">
+            <div className="mb-2">Share with departments:</div>
+            {departments.map(dept => (
+              <label key={dept} className="flex items-center mb-1">
+                <input
+                  type="checkbox"
+                  checked={folder.departmentAccess?.includes(dept) || false}
+                  onChange={(e) => {
+                    const newDepts = e.target.checked 
+                      ? [...(folder.departmentAccess || []), dept]
+                      : (folder.departmentAccess || []).filter(d => d !== dept);
+                    handleShareDepartment(folder._id, newDepts);
+                  }}
+                  className="mr-1"
+                />
+                <span className="capitalize">{dept}</span>
+              </label>
+            ))}
+          </div>
+        )}
         {expandedFolders.has(folder._id) && renderFolderTree(folder._id, level + 1)}
       </div>
     ));
@@ -158,6 +215,17 @@ const Sidebar: React.FC<SidebarProps> = ({
             <FileText className="w-4 h-4 mr-2" />
             <span>Invoice Records</span>
           </div>
+          {user?.role === 'admin' && (
+            <div
+              className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 ${
+                currentFilter === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
+              }`}
+              onClick={() => onFilterChange('admin')}
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              <span>Admin Panel</span>
+            </div>
+          )}
         </div>
 
         {/* Folders */}
@@ -182,7 +250,31 @@ const Sidebar: React.FC<SidebarProps> = ({
                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 autoFocus
               />
-              <div className="flex space-x-1 mt-1">
+              {(user?.role === 'admin' || user?.role === 'manager') && (
+                <div className="mt-2">
+                  <div className="text-xs text-gray-600 mb-1">Share with departments:</div>
+                  <div className="space-y-1">
+                    {departments.map(dept => (
+                      <label key={dept} className="flex items-center text-xs">
+                        <input
+                          type="checkbox"
+                          checked={selectedDepartments.includes(dept)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedDepartments([...selectedDepartments, dept]);
+                            } else {
+                              setSelectedDepartments(selectedDepartments.filter(d => d !== dept));
+                            }
+                          }}
+                          className="mr-1"
+                        />
+                        <span className="capitalize">{dept}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="flex space-x-1 mt-2">
                 <button
                   type="submit"
                   className="px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700"
@@ -194,6 +286,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => {
                     setShowNewFolderForm(false);
                     setNewFolderName('');
+                    setSelectedDepartments([]);
                   }}
                   className="px-2 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
                 >

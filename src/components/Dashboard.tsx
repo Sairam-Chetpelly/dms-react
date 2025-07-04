@@ -8,8 +8,9 @@ import UploadModal from './UploadModal';
 import ShareModal from './ShareModal';
 import FileViewModal from './FileViewModal';
 import InvoiceTable from './InvoiceTable';
+import AdminPanel from './AdminPanel';
 import Chatbot from './Chatbot';
-import { Search, Upload, LogOut, User } from 'lucide-react';
+import { Search, Upload, LogOut, User, Settings } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -17,7 +18,7 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
-  const [currentFilter, setCurrentFilter] = useState<'all' | 'starred' | 'shared' | 'mydrives' | 'invoices'>('all');
+  const [currentFilter, setCurrentFilter] = useState<'all' | 'starred' | 'shared' | 'mydrives' | 'invoices' | 'admin'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [shareDocument, setShareDocument] = useState<Document | null>(null);
@@ -145,6 +146,20 @@ const Dashboard: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              {user?.role === 'admin' && (
+                <button
+                  onClick={() => setCurrentFilter('admin')}
+                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md ${
+                    currentFilter === 'admin'
+                      ? 'text-white bg-indigo-600'
+                      : 'text-indigo-600 bg-white border-indigo-600 hover:bg-indigo-50'
+                  }`}
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Admin Panel
+                </button>
+              )}
+              
               <button
                 onClick={() => setShowUploadModal(true)}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -155,7 +170,12 @@ const Dashboard: React.FC = () => {
               
               <div className="flex items-center space-x-2">
                 <User className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-700">{user?.name}</span>
+                <div className="text-sm text-gray-700">
+                  <div>{user?.name}</div>
+                  <div className="text-xs text-gray-500 capitalize">
+                    {user?.role} - {user?.department}
+                  </div>
+                </div>
                 <button
                   onClick={logout}
                   className="p-2 text-gray-400 hover:text-gray-600"
@@ -175,6 +195,8 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
             </div>
+          ) : currentFilter === 'admin' ? (
+            <AdminPanel />
           ) : currentFilter === 'invoices' ? (
             <InvoiceTable onViewDocument={handleView} />
           ) : (

@@ -18,8 +18,8 @@ api.interceptors.request.use((config) => {
 export const authAPI = {
   login: (email: string, password: string) =>
     api.post<AuthResponse>('/auth/login', { email, password }),
-  register: (name: string, email: string, password: string) =>
-    api.post<AuthResponse>('/auth/register', { name, email, password }),
+  register: (name: string, email: string, password: string, role: string, department: string) =>
+    api.post<AuthResponse>('/auth/register', { name, email, password, role, department }),
   getProfile: () => api.get('/auth/me'),
 };
 
@@ -42,12 +42,14 @@ export const invoicesAPI = {
 };
 
 export const foldersAPI = {
-  create: (name: string, parent?: string) =>
-    api.post<Folder>('/folders', { name, parent }),
+  create: (name: string, parent?: string, departmentAccess?: string[]) =>
+    api.post<Folder>('/folders', { name, parent, departmentAccess }),
   getAll: (parent?: string) => api.get<Folder[]>('/folders', { params: { parent } }),
   getById: (id: string) => api.get<Folder>(`/folders/${id}`),
-  update: (id: string, name: string) =>
-    api.put<Folder>(`/folders/${id}`, { name }),
+  update: (id: string, name: string, departmentAccess?: string[]) =>
+    api.put<Folder>(`/folders/${id}`, { name, departmentAccess }),
+  shareDepartment: (id: string, departments: string[]) =>
+    api.put<Folder>(`/folders/${id}/share-department`, { departments }),
   delete: (id: string) => api.delete(`/folders/${id}`),
 };
 
@@ -67,4 +69,14 @@ export const usersAPI = {
 export const shareAPI = {
   shareDocument: (id: string, userIds: string[], permissions: any) =>
     api.put<Document>(`/documents/${id}/share`, { userIds, permissions }),
+};
+
+export const adminAPI = {
+  getEmployees: () => api.get<User[]>('/admin/employees'),
+  createEmployee: (data: { name: string; email: string; password: string; role: string; department: string }) =>
+    api.post<User>('/admin/employees', data),
+  updateEmployee: (id: string, data: { name: string; email: string; role: string; department: string }) =>
+    api.put<User>(`/admin/employees/${id}`, data),
+  deleteEmployee: (id: string) => api.delete(`/admin/employees/${id}`),
+  getDepartments: () => api.get('/admin/departments'),
 };

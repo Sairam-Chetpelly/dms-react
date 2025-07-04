@@ -7,6 +7,8 @@ const Login: React.FC = () => {
     name: '',
     email: '',
     password: '',
+    role: 'employee' as 'admin' | 'manager' | 'employee',
+    department: 'hr' as 'hr' | 'finance' | 'it' | 'marketing' | 'operations',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +24,7 @@ const Login: React.FC = () => {
       if (isLogin) {
         await login(formData.email, formData.password);
       } else {
-        await register(formData.name, formData.email, formData.password);
+        await register(formData.name, formData.email, formData.password, formData.role, formData.department);
       }
     } catch (error: any) {
       setError(error.response?.data?.message || 'An error occurred');
@@ -31,7 +33,7 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -79,12 +81,44 @@ const Login: React.FC = () => {
                 name="password"
                 type="password"
                 required
-                className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className={`relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 ${isLogin ? 'rounded-b-md' : ''} focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
               />
             </div>
+            {!isLogin && (
+              <>
+                <div>
+                  <select
+                    name="role"
+                    required
+                    className="relative block w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    value={formData.role}
+                    onChange={handleChange}
+                  >
+                    <option value="employee">Employee</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <div>
+                  <select
+                    name="department"
+                    required
+                    className="relative block w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    value={formData.department}
+                    onChange={handleChange}
+                  >
+                    <option value="hr">HR</option>
+                    <option value="finance">Finance</option>
+                    <option value="it">IT</option>
+                    <option value="marketing">Marketing</option>
+                    <option value="operations">Operations</option>
+                  </select>
+                </div>
+              </>
+            )}
           </div>
 
           {error && (
