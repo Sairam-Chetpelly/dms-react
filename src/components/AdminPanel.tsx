@@ -86,6 +86,7 @@ const AdminPanel: React.FC = () => {
 
       {activeTab === 'employees' && (
         <div>
+          <div className='flex justify-end'>
           <button
             onClick={() => {
               setEditingEmployee(null);
@@ -94,8 +95,8 @@ const AdminPanel: React.FC = () => {
             className="mb-6 modern-button"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Employee
           </button>
+          </div>
 
           {/* Employees Table */}
           <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -167,6 +168,7 @@ const AdminPanel: React.FC = () => {
 
       {activeTab === 'departments' && (
         <div>
+          <div className='flex justify-end'>
           <button
             onClick={() => {
               setEditingDepartment(null);
@@ -175,8 +177,8 @@ const AdminPanel: React.FC = () => {
             className="mb-6 modern-button"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Department
           </button>
+          </div>
 
           {/* Departments Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
