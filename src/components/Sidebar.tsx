@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Folder, Tag } from '../types';
-import { foldersAPI, tagsAPI } from '../services/api';
+import { foldersAPI, tagsAPI, adminAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import FolderShareModal from './FolderShareModal';
 import { FolderIcon, Star, Share, Plus, ChevronRight, ChevronDown, HardDrive, FileText, Users, Settings } from 'lucide-react';
 
 interface SidebarProps {
@@ -23,10 +24,23 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [showNewFolderForm, setShowNewFolderForm] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
-  const [showDepartmentShare, setShowDepartmentShare] = useState<string | null>(null);
+  const [shareFolder, setShareFolder] = useState<Folder | null>(null);
   const { user } = useAuth();
   
-  const departments = ['hr', 'finance', 'it', 'marketing', 'operations'];
+  const [allDepartments, setAllDepartments] = useState<any[]>([]);
+  
+  useEffect(() => {
+    loadAllDepartments();
+  }, []);
+  
+  const loadAllDepartments = async () => {
+    try {
+      const response = await adminAPI.getDepartments();
+      setAllDepartments(response.data);
+    } catch (error) {
+      console.error('Error loading departments:', error);
+    }
+  };
 
   useEffect(() => {
     loadFolders();
@@ -56,24 +70,27 @@ const Sidebar: React.FC<SidebarProps> = ({
     if (!newFolderName.trim()) return;
 
     try {
-      await foldersAPI.create(newFolderName, currentFolder || undefined, selectedDepartments);
+      console.log('Creating folder:', {
+        name: newFolderName,
+        parent: currentFolder,
+        departmentAccess: selectedDepartments
+      });
+      
+      const response = await foldersAPI.create(newFolderName, currentFolder || undefined, selectedDepartments);
+      console.log('Folder created:', response.data);
+      
       setNewFolderName('');
       setSelectedDepartments([]);
       setShowNewFolderForm(false);
-      loadFolders();
+      await loadFolders();
     } catch (error) {
       console.error('Error creating folder:', error);
+      alert('Failed to create folder. Please try again.');
     }
   };
   
-  const handleShareDepartment = async (folderId: string, departments: string[]) => {
-    try {
-      await foldersAPI.shareDepartment(folderId, departments);
-      setShowDepartmentShare(null);
-      loadFolders();
-    } catch (error) {
-      console.error('Error sharing folder:', error);
-    }
+  const handleShareComplete = () => {
+    loadFolders();
   };
 
   const toggleFolder = (folderId: string) => {
@@ -116,8 +133,12 @@ const Sidebar: React.FC<SidebarProps> = ({
             </button>
             <FolderIcon className="w-4 h-4 mr-2" />
             <span className="truncate">{folder.name}</span>
-            {folder.departmentAccess && folder.departmentAccess.length > 0 && (
-              <div title={`Shared with: ${folder.departmentAccess.join(', ')}`}>
+            {((folder.departmentAccess && folder.departmentAccess.length > 0) || 
+              (folder.sharedWith && folder.sharedWith.length > 0)) && (
+              <div title={`Shared with: ${[
+                ...(folder.departmentAccess?.map(d => typeof d === 'object' ? d.displayName : d) || []),
+                ...(folder.sharedWith?.map(u => typeof u === 'object' ? u.name : u) || [])
+              ].join(', ')}`}>
                 <Users className="w-3 h-3 ml-1 text-blue-500" />
               </div>
             )}
@@ -126,7 +147,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setShowDepartmentShare(showDepartmentShare === folder._id ? null : folder._id);
+                setShareFolder(folder);
               }}
               className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
               title="Share with departments"
@@ -135,27 +156,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </button>
           )}
         </div>
-        {showDepartmentShare === folder._id && (
-          <div className="ml-4 p-2 bg-gray-50 rounded text-xs">
-            <div className="mb-2">Share with departments:</div>
-            {departments.map(dept => (
-              <label key={dept} className="flex items-center mb-1">
-                <input
-                  type="checkbox"
-                  checked={folder.departmentAccess?.includes(dept) || false}
-                  onChange={(e) => {
-                    const newDepts = e.target.checked 
-                      ? [...(folder.departmentAccess || []), dept]
-                      : (folder.departmentAccess || []).filter(d => d !== dept);
-                    handleShareDepartment(folder._id, newDepts);
-                  }}
-                  className="mr-1"
-                />
-                <span className="capitalize">{dept}</span>
-              </label>
-            ))}
-          </div>
-        )}
+
         {expandedFolders.has(folder._id) && renderFolderTree(folder._id, level + 1)}
       </div>
     ));
@@ -232,12 +233,14 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-semibold text-gray-800">Folders</h3>
-            <button
-              onClick={() => setShowNewFolderForm(true)}
-              className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-black hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+            {(user?.role === 'admin' || user?.role === 'manager') && (
+              <button
+                onClick={() => setShowNewFolderForm(true)}
+                className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-black hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            )}
           </div>
           
           {showNewFolderForm && (
@@ -254,21 +257,21 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div className="mt-2">
                   <div className="text-xs text-gray-600 mb-1">Share with departments:</div>
                   <div className="space-y-1">
-                    {departments.map(dept => (
-                      <label key={dept} className="flex items-center text-xs">
+                    {allDepartments.map(dept => (
+                      <label key={dept._id} className="flex items-center text-xs">
                         <input
                           type="checkbox"
-                          checked={selectedDepartments.includes(dept)}
+                          checked={selectedDepartments.includes(dept._id)}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedDepartments([...selectedDepartments, dept]);
+                              setSelectedDepartments([...selectedDepartments, dept._id]);
                             } else {
-                              setSelectedDepartments(selectedDepartments.filter(d => d !== dept));
+                              setSelectedDepartments(selectedDepartments.filter(d => d !== dept._id));
                             }
                           }}
                           className="mr-1"
                         />
-                        <span className="capitalize">{dept}</span>
+                        <span>{dept.displayName}</span>
                       </label>
                     ))}
                   </div>
@@ -329,6 +332,13 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
       </div>
+      
+      <FolderShareModal
+        folder={shareFolder}
+        isOpen={!!shareFolder}
+        onClose={() => setShareFolder(null)}
+        onShare={handleShareComplete}
+      />
     </div>
   );
 };

@@ -23,6 +23,7 @@ interface InvoiceTableProps {
 const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
   const [invoices, setInvoices] = useState<InvoiceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filtering, setFiltering] = useState(false);
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
@@ -30,16 +31,22 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
     minValue: '',
     maxValue: ''
   });
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
 
-  const loadInvoices = async () => {
+  const loadInvoices = async (isInitialLoad = false) => {
     try {
-      setLoading(true);
+      if (isInitialLoad) {
+        setLoading(true);
+      } else {
+        setFiltering(true);
+      }
+      
       const params: any = {};
-      if (filters.startDate) params.startDate = filters.startDate;
-      if (filters.endDate) params.endDate = filters.endDate;
-      if (filters.vendorName) params.vendorName = filters.vendorName;
-      if (filters.minValue) params.minValue = filters.minValue;
-      if (filters.maxValue) params.maxValue = filters.maxValue;
+      if (debouncedFilters.startDate) params.startDate = debouncedFilters.startDate;
+      if (debouncedFilters.endDate) params.endDate = debouncedFilters.endDate;
+      if (debouncedFilters.vendorName) params.vendorName = debouncedFilters.vendorName;
+      if (debouncedFilters.minValue) params.minValue = debouncedFilters.minValue;
+      if (debouncedFilters.maxValue) params.maxValue = debouncedFilters.maxValue;
 
       const response = await invoicesAPI.getAll(params);
       setInvoices(response.data);
@@ -47,6 +54,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
       console.error('Error loading invoices:', error);
     } finally {
       setLoading(false);
+      setFiltering(false);
     }
   };
 
@@ -78,9 +86,23 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
     return '📁';
   };
 
+  // Debounce filters
   useEffect(() => {
-    loadInvoices();
+    const timer = setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, [filters]);
+
+  useEffect(() => {
+    loadInvoices(true);
+  }, []);
+
+  useEffect(() => {
+    if (loading) return; // Skip if initial load
+    loadInvoices(false);
+  }, [debouncedFilters]);
 
   if (loading) {
     return (
@@ -93,8 +115,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
   return (
     <div className="p-6">
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg border mb-6">
-        <h3 className="text-lg font-semibold mb-4">Filters</h3>
+      <div className="bg-white flex gap-2 p-4 rounded-lg border mb-6">
         <div className="flex grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
@@ -120,6 +141,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
               type="text"
               value={filters.vendorName}
               onChange={(e) => setFilters({...filters, vendorName: e.target.value})}
+              placeholder="Type vendor name..."
               className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
@@ -154,7 +176,12 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <div className="bg-white rounded-lg border overflow-hidden relative">
+        {filtering && (
+          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">

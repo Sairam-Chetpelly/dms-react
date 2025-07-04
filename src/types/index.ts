@@ -1,9 +1,18 @@
+export interface Department {
+  _id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+  isActive: boolean;
+}
+
 export interface User {
+  _id: string;
   id: string;
   name: string;
   email: string;
   role: 'admin' | 'manager' | 'employee';
-  department: 'hr' | 'finance' | 'it' | 'marketing' | 'operations';
+  department: Department;
 }
 
 export interface Document {
@@ -35,7 +44,7 @@ export interface Folder {
   owner: User;
   isShared: boolean;
   sharedWith: User[];
-  departmentAccess: string[];
+  departmentAccess: Department[];
   createdAt: string;
   updatedAt: string;
 }

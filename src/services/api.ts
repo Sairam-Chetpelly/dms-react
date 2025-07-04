@@ -50,6 +50,8 @@ export const foldersAPI = {
     api.put<Folder>(`/folders/${id}`, { name, departmentAccess }),
   shareDepartment: (id: string, departments: string[]) =>
     api.put<Folder>(`/folders/${id}/share-department`, { departments }),
+  shareUsers: (id: string, userIds: string[]) =>
+    api.put<Folder>(`/folders/${id}/share-users`, { userIds }),
   delete: (id: string) => api.delete(`/folders/${id}`),
 };
 
@@ -71,6 +73,17 @@ export const shareAPI = {
     api.put<Document>(`/documents/${id}/share`, { userIds, permissions }),
 };
 
+export interface Department {
+  _id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+  isActive: boolean;
+  employeeCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const adminAPI = {
   getEmployees: () => api.get<User[]>('/admin/employees'),
   createEmployee: (data: { name: string; email: string; password: string; role: string; department: string }) =>
@@ -78,5 +91,12 @@ export const adminAPI = {
   updateEmployee: (id: string, data: { name: string; email: string; role: string; department: string }) =>
     api.put<User>(`/admin/employees/${id}`, data),
   deleteEmployee: (id: string) => api.delete(`/admin/employees/${id}`),
-  getDepartments: () => api.get('/admin/departments'),
+  getDepartments: () => api.get<Department[]>('/admin/departments'),
+  createDepartment: (data: { name: string; displayName: string; description?: string }) =>
+    api.post<Department>('/admin/departments', data),
+  updateDepartment: (id: string, data: { displayName: string; description?: string; isActive: boolean }) =>
+    api.put<Department>(`/admin/departments/${id}`, data),
+  deleteDepartment: (id: string) => api.delete(`/admin/departments/${id}`),
+  shareDepartment: (folderId: string, departments: string[]) =>
+    api.put<Folder>(`/folders/${folderId}/share-department`, { departments }),
 };

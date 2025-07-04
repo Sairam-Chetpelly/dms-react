@@ -173,7 +173,7 @@ const Dashboard: React.FC = () => {
                 <div className="text-sm text-gray-700">
                   <div>{user?.name}</div>
                   <div className="text-xs text-gray-500 capitalize">
-                    {user?.role} - {user?.department}
+                    {user?.role} - {user?.department?.displayName}
                   </div>
                 </div>
                 <button

@@ -24,7 +24,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ document, isOpen, onClose, onSh
     if (isOpen) {
       console.log('Modal opened for document:', document);
       loadUsers();
-      setSelectedUsers(document.sharedWith?.map(u => u.id) || []);
+      setSelectedUsers(document.sharedWith?.map(u => u.id).filter(Boolean) || []);
       setPermissions({
         read: document.permissions?.read?.map((u: any) => u._id || u.id || u) || [],
         write: document.permissions?.write?.map((u: any) => u._id || u.id || u) || [],
