@@ -18,7 +18,6 @@ const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
   const [currentFolder, setCurrentFolder] = useState<string | null>(() => {
     return localStorage.getItem('currentFolder') || null;
   });
@@ -34,6 +33,8 @@ const Dashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
+  const [accessRestricted, setAccessRestricted] = useState(false);
+  const [canUploadToCurrentFolder, setCanUploadToCurrentFolder] = useState(true);
 
   const loadDocuments = async () => {
     try {
@@ -52,16 +53,32 @@ const Dashboard: React.FC = () => {
 
       const response = await documentsAPI.getAll(params);
       setDocuments(response.data);
-    } catch (error) {
+      setAccessRestricted(false);
+      setCanUploadToCurrentFolder(true);
+    } catch (error: any) {
       console.error('Error loading documents:', error);
+      // If access is denied to folder contents, show empty state
+      if (error.response?.status === 403) {
+        setDocuments([]);
+        setAccessRestricted(true);
+        setCanUploadToCurrentFolder(false);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const handleFolderChange = (folderId: string | null) => {
+    setCurrentFolder(folderId);
+    // Reset to 'all' filter when changing folders to ensure proper loading
+    if (currentFilter !== 'all') {
+      setCurrentFilter('all');
     }
   };
 
   useEffect(() => {
     loadDocuments();
-  }, [currentFolder, currentFilter, searchQuery]);
+  }, [currentFolder, currentFilter, searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     localStorage.setItem('currentFilter', currentFilter);
@@ -77,24 +94,7 @@ const Dashboard: React.FC = () => {
 
 
 
-  const handleUpload = async (files: File[]) => {
-    setUploading(true);
-    try {
-      for (const file of files) {
-        const formData = new FormData();
-        formData.append('file', file);
-        if (currentFolder) {
-          formData.append('folder', currentFolder);
-        }
-        await documentsAPI.upload(formData);
-      }
-      loadDocuments();
-    } catch (error) {
-      console.error('Error uploading files:', error);
-    } finally {
-      setUploading(false);
-    }
-  };
+
 
   const handleStar = async (id: string, starred: boolean) => {
     try {
@@ -155,12 +155,15 @@ const Dashboard: React.FC = () => {
       <div className="hidden lg:flex lg:w-64 lg:flex-col">
         <Sidebar
           currentFolder={currentFolder}
-          onFolderChange={setCurrentFolder}
+          onFolderChange={handleFolderChange}
           onFilterChange={setCurrentFilter}
           currentFilter={currentFilter}
           onCreateFolder={() => setShowFolderCreateModal(true)}
           onShareFolder={setShareFolderData}
-          onFolderCreated={() => setFolderRefreshTrigger(prev => prev + 1)}
+          onFolderCreated={() => {
+            setFolderRefreshTrigger(prev => prev + 1);
+            loadDocuments();
+          }}
         />
       </div>
       
@@ -170,12 +173,15 @@ const Dashboard: React.FC = () => {
       }`}>
         <Sidebar
           currentFolder={currentFolder}
-          onFolderChange={setCurrentFolder}
+          onFolderChange={handleFolderChange}
           onFilterChange={setCurrentFilter}
           currentFilter={currentFilter}
           onCreateFolder={() => setShowFolderCreateModal(true)}
           onShareFolder={setShareFolderData}
-          onFolderCreated={() => setFolderRefreshTrigger(prev => prev + 1)}
+          onFolderCreated={() => {
+            setFolderRefreshTrigger(prev => prev + 1);
+            loadDocuments();
+          }}
         />
       </div>
       
@@ -206,14 +212,16 @@ const Dashboard: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Upload Button - Always visible */}
-              <button
-                onClick={() => setShowUploadModal(true)}
-                className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                <Upload className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Upload</span>
-              </button>
+              {/* Upload Button - Hide for certain filters and restricted folders */}
+              {!['starred', 'shared', 'admin', 'invoices'].includes(currentFilter) && canUploadToCurrentFolder && (
+                <button
+                  onClick={() => setShowUploadModal(true)}
+                  className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  <Upload className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Upload</span>
+                </button>
+              )}
               
               {/* Desktop Menu Items */}
               <div className="hidden lg:flex items-center space-x-4">
@@ -324,6 +332,7 @@ const Dashboard: React.FC = () => {
               onDownload={handleDownload}
               onShare={handleShare}
               onView={handleView}
+              accessRestricted={accessRestricted}
             />
           )}
         </main>

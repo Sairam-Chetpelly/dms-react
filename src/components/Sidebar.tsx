@@ -92,59 +92,72 @@ const Sidebar: React.FC<SidebarProps> = ({
       (folder.parent?._id || null) === parentId
     );
 
-    return childFolders.map(folder => (
-      <div key={folder._id}>
-        <div className="flex items-center justify-between group">
-          <div
-            className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 flex-1 ${
-              currentFolder === folder._id ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
-            }`}
-            style={{ paddingLeft: `${(level + 1) * 12}px` }}
-            onClick={(e) =>{ e.stopPropagation();
-                toggleFolder(folder._id); onFolderChange(folder._id)}}
-          >
-            <button
+    return childFolders.map(folder => {
+      const hasAccess = (folder as any).hasAccess !== false;
+      const canViewContent = (folder as any).canViewContent !== false;
+      
+      return (
+        <div key={folder._id}>
+          <div className="flex items-center justify-between group">
+            <div
+              className={`flex items-center px-2 py-1 text-sm rounded cursor-pointer hover:bg-gray-100 flex-1 ${
+                currentFolder === folder._id ? 'bg-indigo-100 text-indigo-700' : 
+                canViewContent ? 'text-gray-700' : 'text-gray-400'
+              } ${!canViewContent ? 'opacity-60' : ''}`}
+              style={{ paddingLeft: `${(level + 1) * 12}px` }}
               onClick={(e) => {
                 e.stopPropagation();
                 toggleFolder(folder._id);
+                onFolderChange(folder._id);
               }}
-              className="mr-1 p-0.5 hover:bg-gray-200 rounded"
+              title={!canViewContent ? 'Access restricted - folder visible due to subfolder permissions' : ''}
             >
-              {expandedFolders.has(folder._id) ? (
-                <ChevronDown className="w-3 h-3" />
-              ) : (
-                <ChevronRight className="w-3 h-3" />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFolder(folder._id);
+                }}
+                className="mr-1 p-0.5 hover:bg-gray-200 rounded"
+              >
+                {expandedFolders.has(folder._id) ? (
+                  <ChevronDown className="w-3 h-3" />
+                ) : (
+                  <ChevronRight className="w-3 h-3" />
+                )}
+              </button>
+              <FolderIcon className={`w-4 h-4 mr-2 ${!canViewContent ? 'text-gray-300' : ''}`} />
+              <span className="truncate">{folder.name}</span>
+              {!canViewContent && (
+                <span className="ml-1 text-xs text-gray-400">🔒</span>
               )}
-            </button>
-            <FolderIcon className="w-4 h-4 mr-2" />
-            <span className="truncate">{folder.name}</span>
-            {((folder.departmentAccess && folder.departmentAccess.length > 0) || 
-              (folder.sharedWith && folder.sharedWith.length > 0)) && (
-              <div title={`Shared with: ${[
-                ...(folder.departmentAccess?.map(d => typeof d === 'object' ? d.displayName : d) || []),
-                ...(folder.sharedWith?.map(u => typeof u === 'object' ? u.name : u) || [])
-              ].join(', ')}`}>
-                <Users className="w-3 h-3 ml-1 text-blue-500" />
-              </div>
+              {((folder.departmentAccess && folder.departmentAccess.length > 0) || 
+                (folder.sharedWith && folder.sharedWith.length > 0)) && (
+                <div title={`Shared with: ${[
+                  ...(folder.departmentAccess?.map(d => typeof d === 'object' ? d.displayName : d) || []),
+                  ...(folder.sharedWith?.map(u => typeof u === 'object' ? u.name : u) || [])
+                ].join(', ')}`}>
+                  <Users className="w-3 h-3 ml-1 text-blue-500" />
+                </div>
+              )}
+            </div>
+            {(user?.role === 'admin' || user?.role === 'manager') && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShareFolder(folder);
+                }}
+                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
+                title="Share with departments"
+              >
+                <Share className="w-3 h-3" />
+              </button>
             )}
           </div>
-          {(user?.role === 'admin' || user?.role === 'manager') && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onShareFolder(folder);
-              }}
-              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
-              title="Share with departments"
-            >
-              <Share className="w-3 h-3" />
-            </button>
-          )}
-        </div>
 
-        {expandedFolders.has(folder._id) && renderFolderTree(folder._id, level + 1)}
-      </div>
-    ));
+          {expandedFolders.has(folder._id) && renderFolderTree(folder._id, level + 1)}
+        </div>
+      );
+    });
   };
 
   return (

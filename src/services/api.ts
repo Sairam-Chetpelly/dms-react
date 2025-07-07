@@ -46,6 +46,8 @@ export const foldersAPI = {
     api.post<Folder>('/folders', { name, parent, departmentAccess }),
   getAll: (parent?: string) => api.get<Folder[]>('/folders', { params: { parent } }),
   getById: (id: string) => api.get<Folder>(`/folders/${id}`),
+  getContents: (id: string) => api.get(`/folders/${id}/contents`),
+  getHierarchy: () => api.get('/folders/hierarchy'),
   update: (id: string, name: string, departmentAccess?: string[]) =>
     api.put<Folder>(`/folders/${id}`, { name, departmentAccess }),
   shareDepartment: (id: string, departments: string[]) =>

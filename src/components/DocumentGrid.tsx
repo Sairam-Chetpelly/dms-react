@@ -9,6 +9,7 @@ interface DocumentGridProps {
   onDownload: (id: string) => void;
   onShare: (document: Document) => void;
   onView: (document: Document) => void;
+  accessRestricted?: boolean;
 }
 
 const DocumentGrid: React.FC<DocumentGridProps> = ({
@@ -18,6 +19,7 @@ const DocumentGrid: React.FC<DocumentGridProps> = ({
   onDownload,
   onShare,
   onView,
+  accessRestricted = false,
 }) => {
   const getFileIcon = (mimeType: string) => {
     if (mimeType.startsWith('image/')) return <Image className="w-8 h-8" />;
@@ -42,8 +44,14 @@ const DocumentGrid: React.FC<DocumentGridProps> = ({
     return (
       <div className="text-center py-12">
         <FileText className="mx-auto h-12 w-12 text-gray-400" />
-        <h3 className="mt-2 text-sm font-medium text-gray-900">No documents</h3>
-        <p className="mt-1 text-sm text-gray-500">Get started by uploading a document.</p>
+        <h3 className="mt-2 text-sm font-medium text-gray-900">
+          {accessRestricted ? 'Access Restricted' : 'No documents'}
+        </h3>
+        <p className="mt-1 text-sm text-gray-500">
+          {accessRestricted 
+            ? 'You can see this folder in the hierarchy but don\'t have permission to view its contents.' 
+            : 'Get started by uploading a document.'}
+        </p>
       </div>
     );
   }

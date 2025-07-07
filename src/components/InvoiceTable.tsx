@@ -164,10 +164,10 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
             />
           </div>
         </div>
-        <div className="mt-4">
+        <div className="flex items-end">
           <button
             onClick={handleExport}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center"
           >
             <Download className="w-4 h-4 mr-2" />
             Export Excel
