@@ -50,18 +50,18 @@ const AdminPanel: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-        <p className="text-gray-600">Manage employees and departments</p>
+    <div className="p-4 sm:p-6">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Admin Panel</h1>
+        <p className="text-sm sm:text-base text-gray-600">Manage employees and departments</p>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
+      <div className="border-b border-gray-200 mb-4 sm:mb-6">
+        <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto">
           <button
             onClick={() => setActiveTab('employees')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+            className={`py-2 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
               activeTab === 'employees'
                 ? 'border-indigo-500 text-indigo-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -72,7 +72,7 @@ const AdminPanel: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('departments')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+            className={`py-2 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
               activeTab === 'departments'
                 ? 'border-indigo-500 text-indigo-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -86,122 +86,132 @@ const AdminPanel: React.FC = () => {
 
       {activeTab === 'employees' && (
         <div>
-          <div className='flex justify-end'>
-          <button
-            onClick={() => {
-              setEditingEmployee(null);
-              setShowEmployeeModal(true);
-            }}
-            className="mb-6 modern-button"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-          </button>
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 sm:hidden">Employees</h2>
+            <button
+              onClick={() => {
+                setEditingEmployee(null);
+                setShowEmployeeModal(true);
+              }}
+              className="modern-button text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2"
+            >
+              <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Add Employee</span>
+            </button>
           </div>
 
           {/* Employees Table */}
           <div className="bg-white shadow rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Role
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Department
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {employees.map((employee) => (
-                  <tr key={employee._id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {employee.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {employee.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        employee.role === 'admin' ? 'bg-red-100 text-red-800' :
-                        employee.role === 'manager' ? 'bg-cyan-100 text-cyan-800' :
-                        'bg-green-100 text-green-800'
-                      }`}>
-                        {employee.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {employee.department?.displayName || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => {
-                          setEditingEmployee(employee);
-                          setShowEmployeeModal(true);
-                        }}
-                        className="text-indigo-600 hover:text-indigo-900 mr-3"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(employee._id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                      Email
+                    </th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                      Department
+                    </th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {employees.map((employee) => (
+                    <tr key={employee._id}>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{employee.name}</div>
+                        <div className="text-xs text-gray-500 sm:hidden">{employee.email}</div>
+                        <div className="text-xs text-gray-500 md:hidden">{employee.department?.displayName || 'N/A'}</div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                        {employee.email}
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          employee.role === 'admin' ? 'bg-red-100 text-red-800' :
+                          employee.role === 'manager' ? 'bg-cyan-100 text-cyan-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {employee.role}
+                        </span>
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+                        {employee.department?.displayName || 'N/A'}
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => {
+                              setEditingEmployee(employee);
+                              setShowEmployeeModal(true);
+                            }}
+                            className="text-indigo-600 hover:text-indigo-900 p-1"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(employee._id)}
+                            className="text-red-600 hover:text-red-900 p-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
       {activeTab === 'departments' && (
         <div>
-          <div className='flex justify-end'>
-          <button
-            onClick={() => {
-              setEditingDepartment(null);
-              setShowDepartmentModal(true);
-            }}
-            className="mb-6 modern-button"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-          </button>
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 sm:hidden">Departments</h2>
+            <button
+              onClick={() => {
+                setEditingDepartment(null);
+                setShowDepartmentModal(true);
+              }}
+              className="modern-button text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2"
+            >
+              <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Add Department</span>
+            </button>
           </div>
 
           {/* Departments Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {departments.map((dept) => (
-              <div key={dept._id} className="bg-white p-6 rounded-lg shadow group">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Building className="w-8 h-8 text-indigo-600 mr-3" />
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
+              <div key={dept._id} className="bg-white p-4 sm:p-6 rounded-lg shadow group">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start flex-1">
+                    <Building className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 mr-2 sm:mr-3 mt-1" />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
                         {dept.displayName}
                       </h3>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-xs sm:text-sm text-gray-500">
                         {dept.employeeCount} employees
                       </p>
                       {dept.description && (
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-gray-400 mt-1 line-clamp-2">
                           {dept.description}
                         </p>
                       )}
                     </div>
                   </div>
-                  <div className="opacity-0 group-hover:opacity-100 flex space-x-1">
+                  <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 flex space-x-1 ml-2">
                     <button
                       onClick={() => {
                         setEditingDepartment(dept);

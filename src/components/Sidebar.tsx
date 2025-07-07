@@ -11,6 +11,7 @@ interface SidebarProps {
   currentFilter: 'all' | 'starred' | 'shared' | 'mydrives' | 'invoices' | 'admin';
   onCreateFolder: () => void;
   onShareFolder: (folder: any) => void;
+  onFolderCreated?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -20,6 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   currentFilter,
   onCreateFolder,
   onShareFolder,
+  onFolderCreated,
 }) => {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -46,6 +48,12 @@ const Sidebar: React.FC<SidebarProps> = ({
     loadFolders();
     loadTags();
   }, []);
+
+  useEffect(() => {
+    if (onFolderCreated) {
+      loadFolders();
+    }
+  }, [onFolderCreated]);
 
   const loadFolders = async () => {
     try {
@@ -92,7 +100,8 @@ const Sidebar: React.FC<SidebarProps> = ({
               currentFolder === folder._id ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700'
             }`}
             style={{ paddingLeft: `${(level + 1) * 12}px` }}
-            onClick={() => onFolderChange(folder._id)}
+            onClick={(e) =>{ e.stopPropagation();
+                toggleFolder(folder._id); onFolderChange(folder._id)}}
           >
             <button
               onClick={(e) => {

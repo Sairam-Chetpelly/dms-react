@@ -12,21 +12,28 @@ import AdminPanel from './AdminPanel';
 import Chatbot from './Chatbot';
 import FolderCreateModal from './FolderCreateModal';
 import FolderShareModal from './FolderShareModal';
-import { Search, Upload, LogOut, User, Settings } from 'lucide-react';
+import { Search, Upload, LogOut, User, Settings, Menu, MoreVertical } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [currentFolder, setCurrentFolder] = useState<string | null>(null);
-  const [currentFilter, setCurrentFilter] = useState<'all' | 'starred' | 'shared' | 'mydrives' | 'invoices' | 'admin'>('all');
+  const [currentFolder, setCurrentFolder] = useState<string | null>(() => {
+    return localStorage.getItem('currentFolder') || null;
+  });
+  const [currentFilter, setCurrentFilter] = useState<'all' | 'starred' | 'shared' | 'mydrives' | 'invoices' | 'admin'>(() => {
+    return (localStorage.getItem('currentFilter') as any) || 'all';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [shareDocument, setShareDocument] = useState<Document | null>(null);
   const [viewDocument, setViewDocument] = useState<Document | null>(null);
   const [showFolderCreateModal, setShowFolderCreateModal] = useState(false);
   const [shareFolderData, setShareFolderData] = useState<any>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
 
   const loadDocuments = async () => {
     try {
@@ -55,6 +62,18 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     loadDocuments();
   }, [currentFolder, currentFilter, searchQuery]);
+
+  useEffect(() => {
+    localStorage.setItem('currentFilter', currentFilter);
+  }, [currentFilter]);
+
+  useEffect(() => {
+    if (currentFolder) {
+      localStorage.setItem('currentFolder', currentFolder);
+    } else {
+      localStorage.removeItem('currentFolder');
+    }
+  }, [currentFolder]);
 
 
 
@@ -122,79 +141,171 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar
-        currentFolder={currentFolder}
-        onFolderChange={setCurrentFolder}
-        onFilterChange={setCurrentFilter}
-        currentFilter={currentFilter}
-        onCreateFolder={() => setShowFolderCreateModal(true)}
-        onShareFolder={setShareFolderData}
-      />
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 lg:hidden" 
+          onClick={() => setSidebarOpen(false)}
+        >
+          <div className="absolute inset-0 bg-gray-600 opacity-75"></div>
+        </div>
+      )}
       
-      <div className="flex-1 flex flex-col overflow-hidden bg-white/80 backdrop-blur-sm">
+      {/* Sidebar - Desktop: static, Mobile: fixed overlay */}
+      <div className="hidden lg:flex lg:w-64 lg:flex-col">
+        <Sidebar
+          currentFolder={currentFolder}
+          onFolderChange={setCurrentFolder}
+          onFilterChange={setCurrentFilter}
+          currentFilter={currentFilter}
+          onCreateFolder={() => setShowFolderCreateModal(true)}
+          onShareFolder={setShareFolderData}
+          onFolderCreated={() => setFolderRefreshTrigger(prev => prev + 1)}
+        />
+      </div>
+      
+      {/* Mobile Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:hidden ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <Sidebar
+          currentFolder={currentFolder}
+          onFolderChange={setCurrentFolder}
+          onFilterChange={setCurrentFilter}
+          currentFilter={currentFilter}
+          onCreateFolder={() => setShowFolderCreateModal(true)}
+          onShareFolder={setShareFolderData}
+          onFolderCreated={() => setFolderRefreshTrigger(prev => prev + 1)}
+        />
+      </div>
+      
+      <div className="flex-1 flex flex-col overflow-hidden bg-white/80 backdrop-blur-sm min-w-0">
         {/* Header */}
-        <header className="modern-card border-b border-white/20 px-6 py-4 shadow-lg backdrop-blur-xl">
+        <header className="modern-card border-b border-white/20 px-4 sm:px-6 py-4 shadow-lg backdrop-blur-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold gradient-text">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 lg:hidden"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+              <h1 className="text-xl sm:text-2xl font-bold gradient-text">
                 📄 DMS
               </h1>
-              <div className="relative">
+              <div className="relative hidden sm:block">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Search documents..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-48 lg:w-64"
                 />
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
-              {user?.role === 'admin' && (
-                <button
-                  onClick={() => setCurrentFilter('admin')}
-                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg transition-colors ${
-                    currentFilter === 'admin'
-                      ? 'text-white bg-blue-600 shadow-sm'
-                      : 'text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100'
-                  }`}
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Admin Panel
-                </button>
-              )}
-              
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Upload Button - Always visible */}
               <button
                 onClick={() => setShowUploadModal(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-sm"
+                className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm"
               >
-                <Upload className="w-4 h-4 mr-2" />
-                Upload
+                <Upload className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Upload</span>
               </button>
               
-              <div className="flex items-center space-x-2">
-                <User className="w-4 h-4 text-gray-400" />
-                <div className="text-sm text-gray-700">
-                  <div>{user?.name}</div>
-                  <div className="text-xs text-gray-500 capitalize">
-                    {user?.role} - {user?.department?.displayName}
+              {/* Desktop Menu Items */}
+              <div className="hidden lg:flex items-center space-x-4">
+                {user?.role === 'admin' && (
+                  <button
+                    onClick={() => setCurrentFilter('admin')}
+                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg transition-colors ${
+                      currentFilter === 'admin'
+                        ? 'text-white bg-blue-600 shadow-sm'
+                        : 'text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100'
+                    }`}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Admin Panel
+                  </button>
+                )}
+                
+                <div className="flex items-center space-x-2">
+                  <User className="w-4 h-4 text-gray-400" />
+                  <div className="text-sm text-gray-700">
+                    <div>{user?.name}</div>
+                    <div className="text-xs text-gray-500 capitalize">
+                      {user?.role} - {user?.department?.displayName}
+                    </div>
                   </div>
+                  <button
+                    onClick={logout}
+                    className="p-2 text-gray-400 hover:text-gray-600"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
                 </div>
+              </div>
+              
+              {/* Mobile/Tablet Menu */}
+              <div className="lg:hidden relative">
                 <button
-                  onClick={logout}
-                  className="p-2 text-gray-400 hover:text-gray-600"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <MoreVertical className="h-5 w-5" />
                 </button>
+                
+                {mobileMenuOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-[9998]" 
+                      onClick={() => setMobileMenuOpen(false)}
+                    ></div>
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl z-[9999] border">
+                      <div className="py-1">
+                        <div className="px-4 py-2 text-sm text-gray-700 border-b">
+                          <div className="font-medium">{user?.name}</div>
+                          <div className="text-xs text-gray-500 capitalize">
+                            {user?.role} - {user?.department?.displayName}
+                          </div>
+                        </div>
+                        
+                        {user?.role === 'admin' && (
+                          <button
+                            onClick={() => {
+                              setCurrentFilter('admin');
+                              setMobileMenuOpen(false);
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Settings className="w-4 h-4 mr-3" />
+                            Admin Panel
+                          </button>
+                        )}
+                        
+                        <button
+                          onClick={() => {
+                            logout();
+                            setMobileMenuOpen(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t"
+                        >
+                          <LogOut className="w-4 h-4 mr-3" />
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
 
 
           {loading ? (
@@ -243,7 +354,10 @@ const Dashboard: React.FC = () => {
       <FolderCreateModal
         isOpen={showFolderCreateModal}
         onClose={() => setShowFolderCreateModal(false)}
-        onCreate={loadDocuments}
+        onCreate={() => {
+          loadDocuments();
+          setFolderRefreshTrigger(prev => prev + 1);
+        }}
         currentFolder={currentFolder}
       />
       
@@ -251,7 +365,10 @@ const Dashboard: React.FC = () => {
         folder={shareFolderData}
         isOpen={!!shareFolderData}
         onClose={() => setShareFolderData(null)}
-        onShare={loadDocuments}
+        onShare={() => {
+          loadDocuments();
+          setFolderRefreshTrigger(prev => prev + 1);
+        }}
       />
       
       <Chatbot />
