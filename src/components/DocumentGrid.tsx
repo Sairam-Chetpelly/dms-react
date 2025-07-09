@@ -21,7 +21,8 @@ const DocumentGrid: React.FC<DocumentGridProps> = ({
   onView,
   accessRestricted = false,
 }) => {
-  const getFileIcon = (mimeType: string) => {
+  const getFileIcon = (mimeType?: string) => {
+    if (!mimeType) return <FileText className="w-8 h-8" />;
     if (mimeType.startsWith('image/')) return <Image className="w-8 h-8" />;
     if (mimeType.startsWith('video/')) return <Video className="w-8 h-8" />;
     if (mimeType.startsWith('audio/')) return <Music className="w-8 h-8" />;
@@ -58,7 +59,7 @@ const DocumentGrid: React.FC<DocumentGridProps> = ({
 
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" style={{ gap: '10px' }}>
-      {documents.map((document) => (
+      {documents.filter(doc => doc).map((document) => (
         <div
           key={document._id}
           className="relative group p-6 rounded-xl card-hover glass-effect card-gradient overflow-hidden"
@@ -66,16 +67,16 @@ const DocumentGrid: React.FC<DocumentGridProps> = ({
           <div className="absolute inset-0 shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
           <div className="flex items-center justify-between mb-4 relative z-10">
             <div className="text-indigo-600 icon-bounce p-4 bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 rounded-2xl border-2 border-indigo-200 shadow-md">
-              {getFileIcon(document.mimeType)}
+              {getFileIcon(document?.mimeType)}
             </div>
             <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-300 relative z-10">
               <button
-                onClick={() => onStar(document._id, !document.isStarred)}
+                onClick={() => onStar(document._id, !document?.isStarred)}
                 className={`p-2 rounded-full hover:bg-gray-100 transition-all ${
-                  document.isStarred ? 'text-yellow-500 pulse-animation' : 'text-gray-400'
+                  document?.isStarred ? 'text-yellow-500 pulse-animation' : 'text-gray-400'
                 }`}
               >
-                <Star className="w-4 h-4" fill={document.isStarred ? 'currentColor' : 'none'} />
+                <Star className="w-4 h-4" fill={document?.isStarred ? 'currentColor' : 'none'} />
               </button>
               <button
                 onClick={() => onView(document)}
@@ -107,16 +108,16 @@ const DocumentGrid: React.FC<DocumentGridProps> = ({
           <div className="min-h-0 relative z-10">
             <h3 
               className="text-sm font-medium text-gray-900 truncate cursor-pointer hover:text-indigo-600" 
-              title={document.originalName}
+              title={document?.originalName || 'Unknown'}
               onClick={() => onView(document)}
             >
-              {document.originalName}
+              {document?.originalName || 'Unknown Document'}
             </h3>
             <p className="text-xs text-gray-500 mt-1">
-              {formatFileSize(document.size)} • {formatDate(document.createdAt)}
+              {formatFileSize(document?.size || 0)} • {formatDate(document?.createdAt || new Date().toISOString())}
             </p>
             
-            {document.tags.length > 0 && (
+            {document?.tags && document.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {document.tags.slice(0, 2).map((tag) => (
                   <span
