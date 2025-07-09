@@ -211,13 +211,13 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
                 <tr key={invoice._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <span className="text-2xl mr-3">{getFileIcon(invoice.document.mimeType)}</span>
+                      <span className="text-2xl mr-3">{invoice.document ? getFileIcon(invoice.document.mimeType) : '📁'}</span>
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {invoice.document.originalName}
+                          {invoice.document?.originalName || 'Document not found'}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {invoice.document.mimeType}
+                          {invoice.document?.mimeType || 'Unknown type'}
                         </div>
                       </div>
                     </div>
@@ -235,12 +235,14 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
                     {invoice.invoiceQty}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => onViewDocument(invoice.document)}
-                      className="text-indigo-600 hover:text-indigo-900 mr-3"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
+                    {invoice.document && (
+                      <button
+                        onClick={() => onViewDocument(invoice.document)}
+                        className="text-indigo-600 hover:text-indigo-900 mr-3"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

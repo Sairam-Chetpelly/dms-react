@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Chatbot from './components/Chatbot';
+import SharingDemo from './components/SharingDemo';
 import './App.css';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -54,6 +55,14 @@ function App() {
                 <ProtectedRoute>
                   <Dashboard />
                   <Chatbot />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sharing-demo"
+              element={
+                <ProtectedRoute>
+                  <SharingDemo />
                 </ProtectedRoute>
               }
             />

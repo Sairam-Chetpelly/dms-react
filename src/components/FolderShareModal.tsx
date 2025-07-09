@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Folder, User } from '../types';
-import { adminAPI, foldersAPI } from '../services/api';
+import { adminAPI, foldersAPI, usersAPI } from '../services/api';
 import { X, Users, UserCheck } from 'lucide-react';
 
 interface FolderShareModalProps {
@@ -44,8 +44,12 @@ const FolderShareModal: React.FC<FolderShareModalProps> = ({
 
   const loadUsers = async () => {
     try {
-      const response = await adminAPI.getEmployees();
-      setUsers(response.data);
+      const response = await usersAPI.getAll();
+      // Filter out the folder owner
+      const filteredUsers = response.data.filter((u: User) => 
+        (u.id || u._id) !== (folder?.owner?.id || folder?.owner?._id)
+      );
+      setUsers(filteredUsers);
     } catch (error) {
       console.error('Error loading users:', error);
     }
@@ -56,14 +60,15 @@ const FolderShareModal: React.FC<FolderShareModalProps> = ({
     
     try {
       if (activeTab === 'departments') {
-        await adminAPI.shareDepartment(folder._id, selectedDepartments);
+        await foldersAPI.shareDepartment(folder._id, selectedDepartments);
       } else {
-        await foldersAPI.shareUsers(folder._id, selectedUsers);
+        await foldersAPI.share(folder._id, selectedUsers);
       }
       onShare();
       onClose();
     } catch (error) {
       console.error('Error sharing folder:', error);
+      alert('Error sharing folder. Please try again.');
     }
   };
 
@@ -144,9 +149,9 @@ const FolderShareModal: React.FC<FolderShareModalProps> = ({
               >
                 <option value="">Select a user to add...</option>
                 {users
-                  .filter(user => !selectedUsers.includes(user._id))
+                  .filter(user => !selectedUsers.includes(user._id || user.id))
                   .map(user => (
-                    <option key={user._id} value={user._id}>
+                    <option key={user._id || user.id} value={user._id || user.id}>
                       {user.name} - {user.email} ({user.role})
                     </option>
                   ))
@@ -158,7 +163,7 @@ const FolderShareModal: React.FC<FolderShareModalProps> = ({
                   <p className="text-sm font-medium text-gray-700 mb-2">Selected Users:</p>
                   <div className="space-y-2">
                     {selectedUsers.map(userId => {
-                      const user = users.find(u => u._id === userId);
+                      const user = users.find(u => (u._id || u.id) === userId);
                       if (!user) return null;
                       return (
                         <div key={userId} className="flex items-center justify-between bg-gray-50 p-2 rounded">

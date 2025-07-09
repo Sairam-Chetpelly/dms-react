@@ -22,9 +22,8 @@ const ShareModal: React.FC<ShareModalProps> = ({ document, isOpen, onClose, onSh
 
   useEffect(() => {
     if (isOpen) {
-      console.log('Modal opened for document:', document);
       loadUsers();
-      setSelectedUsers(document.sharedWith?.map(u => u.id).filter(Boolean) || []);
+      setSelectedUsers(document.sharedWith?.map(u => u.id || u._id).filter(Boolean) || []);
       setPermissions({
         read: document.permissions?.read?.map((u: any) => u._id || u.id || u) || [],
         write: document.permissions?.write?.map((u: any) => u._id || u.id || u) || [],
@@ -36,10 +35,9 @@ const ShareModal: React.FC<ShareModalProps> = ({ document, isOpen, onClose, onSh
   const loadUsers = async () => {
     try {
       const response = await usersAPI.getAll();
-      console.log('API response:', response);
-      console.log('Users data:', response.data);
-      const filteredUsers = response.data.filter(u => u.id !== document.owner.id);
-      console.log('Filtered users:', filteredUsers);
+      const filteredUsers = response.data.filter(u => 
+        (u.id || u._id) !== (document.owner.id || document.owner._id)
+      );
       setUsers(filteredUsers);
     } catch (error) {
       console.error('Error loading users:', error);
@@ -48,11 +46,29 @@ const ShareModal: React.FC<ShareModalProps> = ({ document, isOpen, onClose, onSh
   };
 
   const handleUserToggle = (userId: string) => {
-    setSelectedUsers(prev => 
-      prev.includes(userId) 
+    setSelectedUsers(prev => {
+      const isSelected = prev.includes(userId);
+      const newSelection = isSelected 
         ? prev.filter(id => id !== userId)
-        : [...prev, userId]
-    );
+        : [...prev, userId];
+      
+      // Auto-add read permission when user is selected
+      if (!isSelected) {
+        setPermissions(prevPerms => ({
+          ...prevPerms,
+          read: [...prevPerms.read, userId]
+        }));
+      } else {
+        // Remove all permissions when user is deselected
+        setPermissions(prevPerms => ({
+          read: prevPerms.read.filter(id => id !== userId),
+          write: prevPerms.write.filter(id => id !== userId),
+          delete: prevPerms.delete.filter(id => id !== userId)
+        }));
+      }
+      
+      return newSelection;
+    });
   };
 
   const handlePermissionChange = (userId: string, permission: 'read' | 'write' | 'delete', checked: boolean) => {
@@ -105,8 +121,8 @@ const ShareModal: React.FC<ShareModalProps> = ({ document, isOpen, onClose, onSh
                   <div className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={selectedUsers.includes(user.id)}
-                      onChange={() => handleUserToggle(user.id)}
+                      checked={selectedUsers.includes(user.id || user._id)}
+                      onChange={() => handleUserToggle(user.id || user._id)}
                       className="mr-2"
                     />
                     <span className="text-sm font-medium">{user.name}</span>
@@ -114,13 +130,13 @@ const ShareModal: React.FC<ShareModalProps> = ({ document, isOpen, onClose, onSh
                   </div>
                 </div>
                 
-                {selectedUsers.includes(user.id) && (
+                {selectedUsers.includes(user.id || user._id) && (
                   <div className="flex space-x-4 text-xs">
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={permissions.read.includes(user.id)}
-                        onChange={(e) => handlePermissionChange(user.id, 'read', e.target.checked)}
+                        checked={permissions.read.includes(user.id || user._id)}
+                        onChange={(e) => handlePermissionChange(user.id || user._id, 'read', e.target.checked)}
                         className="mr-1"
                       />
                       Read
@@ -128,8 +144,8 @@ const ShareModal: React.FC<ShareModalProps> = ({ document, isOpen, onClose, onSh
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={permissions.write.includes(user.id)}
-                        onChange={(e) => handlePermissionChange(user.id, 'write', e.target.checked)}
+                        checked={permissions.write.includes(user.id || user._id)}
+                        onChange={(e) => handlePermissionChange(user.id || user._id, 'write', e.target.checked)}
                         className="mr-1"
                       />
                       Edit
@@ -137,8 +153,8 @@ const ShareModal: React.FC<ShareModalProps> = ({ document, isOpen, onClose, onSh
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={permissions.delete.includes(user.id)}
-                        onChange={(e) => handlePermissionChange(user.id, 'delete', e.target.checked)}
+                        checked={permissions.delete.includes(user.id || user._id)}
+                        onChange={(e) => handlePermissionChange(user.id || user._id, 'delete', e.target.checked)}
                         className="mr-1"
                       />
                       Delete

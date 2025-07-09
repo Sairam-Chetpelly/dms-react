@@ -54,6 +54,8 @@ export const foldersAPI = {
     api.put<Folder>(`/folders/${id}/share-department`, { departments }),
   shareUsers: (id: string, userIds: string[]) =>
     api.put<Folder>(`/folders/${id}/share-users`, { userIds }),
+  share: (id: string, userIds: string[]) =>
+    api.put<Folder>(`/folders/${id}/share`, { userIds }),
   delete: (id: string) => api.delete(`/folders/${id}`),
 };
 
@@ -68,11 +70,14 @@ export const tagsAPI = {
 
 export const usersAPI = {
   getAll: () => api.get<User[]>('/users'),
+  getById: (id: string) => api.get<User>(`/users/${id}`),
 };
 
 export const shareAPI = {
   shareDocument: (id: string, userIds: string[], permissions: any) =>
     api.put<Document>(`/documents/${id}/share`, { userIds, permissions }),
+  shareFolder: (id: string, userIds: string[]) =>
+    api.put<Folder>(`/folders/${id}/share`, { userIds }),
 };
 
 export interface Department {

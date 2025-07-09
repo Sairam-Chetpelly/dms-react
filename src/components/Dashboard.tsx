@@ -118,14 +118,16 @@ const Dashboard: React.FC = () => {
 
   const handleDownload = async (id: string) => {
     try {
+      const doc = documents.find(doc => doc._id === id);
       const response = await documentsAPI.download(id);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: doc?.mimeType }));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', '');
+      link.setAttribute('download', doc?.originalName || 'download');
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading document:', error);
     }
