@@ -75,6 +75,14 @@ const Dashboard: React.FC = () => {
       setCurrentFilter('all');
     }
   };
+  
+  const handleFilterChange = (filter: 'all' | 'starred' | 'shared' | 'mydrives' | 'invoices' | 'admin') => {
+    setCurrentFilter(filter);
+    // Reset folder when switching to shared or mydrives
+    if (filter === 'shared' || filter === 'mydrives' || filter === 'starred' || filter === 'admin' || filter === 'invoices') {
+      setCurrentFolder(null);
+    }
+  };
 
   useEffect(() => {
     loadDocuments();
@@ -158,7 +166,7 @@ const Dashboard: React.FC = () => {
         <Sidebar
           currentFolder={currentFolder}
           onFolderChange={handleFolderChange}
-          onFilterChange={setCurrentFilter}
+          onFilterChange={handleFilterChange}
           currentFilter={currentFilter}
           onCreateFolder={() => setShowFolderCreateModal(true)}
           onShareFolder={setShareFolderData}
@@ -176,7 +184,7 @@ const Dashboard: React.FC = () => {
         <Sidebar
           currentFolder={currentFolder}
           onFolderChange={handleFolderChange}
-          onFilterChange={setCurrentFilter}
+          onFilterChange={handleFilterChange}
           currentFilter={currentFilter}
           onCreateFolder={() => setShowFolderCreateModal(true)}
           onShareFolder={setShareFolderData}
@@ -359,7 +367,7 @@ const Dashboard: React.FC = () => {
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
         onUpload={loadDocuments}
-        currentFolder={currentFolder}
+        currentFolder={currentFilter === 'mydrives' ? null : currentFolder}
       />
       
       <FolderCreateModal
