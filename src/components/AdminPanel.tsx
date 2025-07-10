@@ -3,6 +3,7 @@ import { User } from '../types';
 import { adminAPI, Department } from '../services/api';
 import EmployeeModal from './EmployeeModal';
 import DepartmentModal from './DepartmentModal';
+import Pagination from './Pagination';
 import { Plus, Edit, Trash2, Users, Building } from 'lucide-react';
 
 const AdminPanel: React.FC = () => {
@@ -13,25 +14,36 @@ const AdminPanel: React.FC = () => {
   const [showDepartmentModal, setShowDepartmentModal] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [activeTab, setActiveTab] = useState<'employees' | 'departments'>('employees');
+  
+  // Pagination states
+  const [employeePage, setEmployeePage] = useState(1);
+  const [departmentPage, setDepartmentPage] = useState(1);
+  const [totalEmployees, setTotalEmployees] = useState(0);
+  const [totalDepartments, setTotalDepartments] = useState(0);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     loadEmployees();
     loadDepartments();
   }, []);
 
-  const loadEmployees = async () => {
+  const loadEmployees = async (page = 1) => {
     try {
-      const response = await adminAPI.getEmployees();
-      setEmployees(response.data);
+      const response = await adminAPI.getEmployees({ page, limit: itemsPerPage });
+      setEmployees(response.data.employees || response.data);
+      setTotalEmployees(response.data.total || response.data.length);
+      setEmployeePage(page);
     } catch (error) {
       console.error('Error loading employees:', error);
     }
   };
 
-  const loadDepartments = async () => {
+  const loadDepartments = async (page = 1) => {
     try {
-      const response = await adminAPI.getDepartments();
-      setDepartments(response.data);
+      const response = await adminAPI.getDepartments({ page, limit: itemsPerPage });
+      setDepartments(response.data.departments || response.data);
+      setTotalDepartments(response.data.total || response.data.length);
+      setDepartmentPage(page);
     } catch (error) {
       console.error('Error loading departments:', error);
     }
@@ -41,8 +53,8 @@ const AdminPanel: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
         await adminAPI.deleteEmployee(id);
-        loadEmployees();
-        loadDepartments();
+        loadEmployees(employeePage);
+        loadDepartments(departmentPage);
       } catch (error) {
         console.error('Error deleting employee:', error);
       }
@@ -170,6 +182,13 @@ const AdminPanel: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            <Pagination
+              currentPage={employeePage}
+              totalPages={Math.ceil(totalEmployees / itemsPerPage)}
+              onPageChange={loadEmployees}
+              totalItems={totalEmployees}
+              itemsPerPage={itemsPerPage}
+            />
           </div>
         </div>
       )}
@@ -224,7 +243,7 @@ const AdminPanel: React.FC = () => {
                     <button
                       onClick={() => {
                         if (window.confirm('Are you sure you want to delete this department?')) {
-                          adminAPI.deleteDepartment(dept._id).then(() => loadDepartments());
+                          adminAPI.deleteDepartment(dept._id).then(() => loadDepartments(departmentPage));
                         }
                       }}
                       className="p-1 text-red-600 hover:text-red-900"
@@ -237,6 +256,15 @@ const AdminPanel: React.FC = () => {
               </div>
             ))}
           </div>
+          <div className="mt-6">
+            <Pagination
+              currentPage={departmentPage}
+              totalPages={Math.ceil(totalDepartments / itemsPerPage)}
+              onPageChange={loadDepartments}
+              totalItems={totalDepartments}
+              itemsPerPage={itemsPerPage}
+            />
+          </div>
         </div>
       )}
       
@@ -248,8 +276,8 @@ const AdminPanel: React.FC = () => {
           setEditingEmployee(null);
         }}
         onSave={() => {
-          loadEmployees();
-          loadDepartments();
+          loadEmployees(employeePage);
+          loadDepartments(departmentPage);
         }}
       />
       
@@ -260,7 +288,7 @@ const AdminPanel: React.FC = () => {
           setShowDepartmentModal(false);
           setEditingDepartment(null);
         }}
-        onSave={loadDepartments}
+        onSave={() => loadDepartments(departmentPage)}
       />
     </div>
   );

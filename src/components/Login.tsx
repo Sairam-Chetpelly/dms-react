@@ -25,8 +25,8 @@ const Login: React.FC = () => {
 
   const loadDepartments = async () => {
     try {
-      const response = await adminAPI.getDepartments();
-      setDepartments(response.data);
+      const response = await adminAPI.getDepartments({ page: 1, limit: 100 });
+      setDepartments(response.data.departments || response.data);
     } catch (error) {
       console.error('Error loading departments:', error);
     }

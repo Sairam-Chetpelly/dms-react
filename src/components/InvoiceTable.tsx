@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { invoicesAPI } from '../services/api';
+import Pagination from './Pagination';
 import { FileText, Download, Eye } from 'lucide-react';
 
 interface InvoiceRecord {
@@ -32,8 +33,13 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
     maxValue: ''
   });
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalInvoices, setTotalInvoices] = useState(0);
+  const itemsPerPage = 10;
 
-  const loadInvoices = async (isInitialLoad = false) => {
+  const loadInvoices = async (page = 1, isInitialLoad = false) => {
     try {
       if (isInitialLoad) {
         setLoading(true);
@@ -41,7 +47,10 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
         setFiltering(true);
       }
       
-      const params: any = {};
+      const params: any = {
+        page,
+        limit: itemsPerPage
+      };
       if (debouncedFilters.startDate) params.startDate = debouncedFilters.startDate;
       if (debouncedFilters.endDate) params.endDate = debouncedFilters.endDate;
       if (debouncedFilters.vendorName) params.vendorName = debouncedFilters.vendorName;
@@ -49,7 +58,9 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
       if (debouncedFilters.maxValue) params.maxValue = debouncedFilters.maxValue;
 
       const response = await invoicesAPI.getAll(params);
-      setInvoices(response.data);
+      setInvoices(response.data.invoices || response.data);
+      setTotalInvoices(response.data.total || response.data.length);
+      setCurrentPage(page);
     } catch (error) {
       console.error('Error loading invoices:', error);
     } finally {
@@ -96,12 +107,13 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
   }, [filters]);
 
   useEffect(() => {
-    loadInvoices(true);
+    loadInvoices(1, true);
   }, []);
 
   useEffect(() => {
     if (loading) return; // Skip if initial load
-    loadInvoices(false);
+    setCurrentPage(1); // Reset to first page when filters change
+    loadInvoices(1, false);
   }, [debouncedFilters]);
 
   if (loading) {
@@ -257,6 +269,13 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
             <p className="mt-1 text-sm text-gray-500">Upload documents with invoice data to see records here.</p>
           </div>
         )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(totalInvoices / itemsPerPage)}
+          onPageChange={(page) => loadInvoices(page, false)}
+          totalItems={totalInvoices}
+          itemsPerPage={itemsPerPage}
+        />
       </div>
     </div>
   );

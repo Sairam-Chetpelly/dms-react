@@ -92,13 +92,13 @@ export interface Department {
 }
 
 export const adminAPI = {
-  getEmployees: () => api.get<User[]>('/admin/employees'),
+  getEmployees: (params?: { page?: number; limit?: number }) => api.get('/admin/employees', { params }),
   createEmployee: (data: { name: string; email: string; password: string; role: string; department: string }) =>
     api.post<User>('/admin/employees', data),
   updateEmployee: (id: string, data: { name: string; email: string; role: string; department: string }) =>
     api.put<User>(`/admin/employees/${id}`, data),
   deleteEmployee: (id: string) => api.delete(`/admin/employees/${id}`),
-  getDepartments: () => api.get<Department[]>('/admin/departments'),
+  getDepartments: (params?: { page?: number; limit?: number }) => api.get('/admin/departments', { params }),
   createDepartment: (data: { name: string; displayName: string; description?: string }) =>
     api.post<Department>('/admin/departments', data),
   updateDepartment: (id: string, data: { displayName: string; description?: string; isActive: boolean }) =>
