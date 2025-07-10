@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../types';
 import { adminAPI, Department } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 import { X } from 'lucide-react';
 
 interface EmployeeModalProps {
@@ -16,6 +17,7 @@ const EmployeeModal: React.FC<EmployeeModalProps> = ({
   onClose,
   onSave,
 }) => {
+  const { showToast } = useToast();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [formData, setFormData] = useState({
     name: '',
@@ -67,13 +69,16 @@ const EmployeeModal: React.FC<EmployeeModalProps> = ({
           role: formData.role,
           department: formData.department,
         });
+        showToast('success', 'Employee updated successfully');
       } else {
         await adminAPI.createEmployee(formData);
+        showToast('success', 'Employee created successfully');
       }
       onSave();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving employee:', error);
+      showToast('error', error.response?.data?.message || 'Failed to save employee');
     }
   };
 

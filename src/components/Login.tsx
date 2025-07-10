@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { adminAPI } from '../services/api';
 
 const Login: React.FC = () => {
@@ -16,6 +17,7 @@ const Login: React.FC = () => {
   const [departments, setDepartments] = useState<any[]>([]);
 
   const { login, register } = useAuth();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!isLogin) {
@@ -40,11 +42,15 @@ const Login: React.FC = () => {
     try {
       if (isLogin) {
         await login(formData.email, formData.password);
+        showToast('success', 'Login successful!');
       } else {
         await register(formData.name, formData.email, formData.password, formData.role, formData.department);
+        showToast('success', 'Account created successfully!');
       }
     } catch (error: any) {
-      setError(error.response?.data?.message || 'An error occurred');
+      const errorMsg = error.response?.data?.message || 'An error occurred';
+      setError(errorMsg);
+      showToast('error', errorMsg);
     } finally {
       setLoading(false);
     }

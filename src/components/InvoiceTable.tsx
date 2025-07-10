@@ -60,6 +60,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ onViewDocument }) => {
       const response = await invoicesAPI.getAll(params);
       setInvoices(response.data.invoices || response.data);
       setTotalInvoices(response.data.total || response.data.length);
+      // console.log(totalInvoices);
       setCurrentPage(page);
     } catch (error) {
       console.error('Error loading invoices:', error);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Chatbot from './components/Chatbot';
@@ -37,40 +38,42 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                  <Chatbot />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/sharing-demo"
-              element={
-                <ProtectedRoute>
-                  <SharingDemo />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <Router>
+          <div className="App">
+            <Routes>
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                    <Chatbot />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/sharing-demo"
+                element={
+                  <ProtectedRoute>
+                    <SharingDemo />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </div>
+        </Router>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 

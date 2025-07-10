@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminAPI, Department } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 import { X } from 'lucide-react';
 
 interface DepartmentModalProps {
@@ -15,6 +16,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
   onClose,
   onSave,
 }) => {
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
     displayName: '',
@@ -48,13 +50,16 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
           description: formData.description,
           isActive: true,
         });
+        showToast('success', 'Department updated successfully');
       } else {
         await adminAPI.createDepartment(formData);
+        showToast('success', 'Department created successfully');
       }
       onSave();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving department:', error);
+      showToast('error', error.response?.data?.message || 'Failed to save department');
     }
   };
 

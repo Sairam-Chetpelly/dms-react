@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../types';
 import { adminAPI, Department } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 import EmployeeModal from './EmployeeModal';
 import DepartmentModal from './DepartmentModal';
 import Pagination from './Pagination';
 import { Plus, Edit, Trash2, Users, Building } from 'lucide-react';
 
 const AdminPanel: React.FC = () => {
+  const { showToast } = useToast();
   const [employees, setEmployees] = useState<User[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
@@ -55,8 +57,10 @@ const AdminPanel: React.FC = () => {
         await adminAPI.deleteEmployee(id);
         loadEmployees(employeePage);
         loadDepartments(departmentPage);
-      } catch (error) {
+        showToast('success', 'Employee deleted successfully');
+      } catch (error: any) {
         console.error('Error deleting employee:', error);
+        showToast('error', error.response?.data?.message || 'Failed to delete employee');
       }
     }
   };
@@ -243,7 +247,14 @@ const AdminPanel: React.FC = () => {
                     <button
                       onClick={() => {
                         if (window.confirm('Are you sure you want to delete this department?')) {
-                          adminAPI.deleteDepartment(dept._id).then(() => loadDepartments(departmentPage));
+                          adminAPI.deleteDepartment(dept._id)
+                            .then(() => {
+                              loadDepartments(departmentPage);
+                              showToast('success', 'Department deleted successfully');
+                            })
+                            .catch((error: any) => {
+                              showToast('error', error.response?.data?.message || 'Failed to delete department');
+                            });
                         }
                       }}
                       className="p-1 text-red-600 hover:text-red-900"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Document } from '../types';
 import { documentsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import Sidebar from './Sidebar';
 import DocumentGrid from './DocumentGrid';
 import UploadModal from './UploadModal';
@@ -16,6 +17,7 @@ import { Search, Upload, LogOut, User, Settings, Menu, MoreVertical } from 'luci
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
+  const { showToast } = useToast();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentFolder, setCurrentFolder] = useState<string | null>(() => {
@@ -108,8 +110,10 @@ const Dashboard: React.FC = () => {
     try {
       await documentsAPI.star(id, starred);
       loadDocuments();
+      showToast('success', starred ? 'Document starred' : 'Document unstarred');
     } catch (error) {
       console.error('Error starring document:', error);
+      showToast('error', 'Failed to update document');
     }
   };
 
@@ -118,8 +122,10 @@ const Dashboard: React.FC = () => {
       try {
         await documentsAPI.delete(id);
         loadDocuments();
+        showToast('success', 'Document deleted successfully');
       } catch (error) {
         console.error('Error deleting document:', error);
+        showToast('error', 'Failed to delete document');
       }
     }
   };
@@ -136,8 +142,10 @@ const Dashboard: React.FC = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+      showToast('success', 'Document downloaded successfully');
     } catch (error) {
       console.error('Error downloading document:', error);
+      showToast('error', 'Failed to download document');
     }
   };
 

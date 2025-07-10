@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Document } from '../types';
 import { documentsAPI, invoicesAPI } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 import { X, Upload } from 'lucide-react';
 
 interface UploadModalProps {
@@ -18,6 +19,7 @@ interface InvoiceData {
 }
 
 const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpload, currentFolder }) => {
+  const { showToast } = useToast();
   const [uploadedDocument, setUploadedDocument] = useState<Document | null>(null);
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
     vendorName: '',
@@ -43,6 +45,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpload, cu
 
       const response = await documentsAPI.upload(formData);
       setUploadedDocument(response.data);
+      showToast('success', 'File uploaded successfully');
       
       // If uploading to My Drives, auto-complete the upload
       if (isMyDrivesUpload) {
@@ -53,6 +56,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpload, cu
       }
     } catch (error) {
       console.error('Error uploading file:', error);
+      showToast('error', 'Failed to upload file');
     } finally {
       setUploading(false);
     }
@@ -70,8 +74,10 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpload, cu
 
       onUpload();
       handleClose();
+      showToast('success', 'Invoice record saved successfully');
     } catch (error) {
       console.error('Error saving invoice:', error);
+      showToast('error', 'Failed to save invoice record');
     } finally {
       setSaving(false);
     }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { adminAPI, Department } from '../services/api';
 import { foldersAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { X } from 'lucide-react';
 
 interface FolderCreateModalProps {
@@ -18,6 +19,7 @@ const FolderCreateModal: React.FC<FolderCreateModalProps> = ({
   currentFolder,
 }) => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [folderName, setFolderName] = useState('');
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
@@ -47,8 +49,10 @@ const FolderCreateModal: React.FC<FolderCreateModalProps> = ({
       await foldersAPI.create(folderName, currentFolder || undefined, selectedDepartments);
       onCreate();
       onClose();
-    } catch (error) {
+      showToast('success', 'Folder created successfully');
+    } catch (error: any) {
       console.error('Error creating folder:', error);
+      showToast('error', error.response?.data?.message || 'Failed to create folder');
     }
   };
 

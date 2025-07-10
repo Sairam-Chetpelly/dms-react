@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Document } from '../types';
 import { usersAPI, shareAPI } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 import { X, Share, Check } from 'lucide-react';
 
 interface ShareModalProps {
@@ -11,6 +12,7 @@ interface ShareModalProps {
 }
 
 const ShareModal: React.FC<ShareModalProps> = ({ document, isOpen, onClose, onShare }) => {
+  const { showToast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [permissions, setPermissions] = useState({
@@ -86,8 +88,10 @@ const ShareModal: React.FC<ShareModalProps> = ({ document, isOpen, onClose, onSh
       await shareAPI.shareDocument(document._id, selectedUsers, permissions);
       onShare();
       onClose();
+      showToast('success', 'Document shared successfully');
     } catch (error) {
       console.error('Error sharing document:', error);
+      showToast('error', 'Failed to share document');
     } finally {
       setLoading(false);
     }

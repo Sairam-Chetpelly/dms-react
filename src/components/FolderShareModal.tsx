@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Folder, User } from '../types';
 import { adminAPI, foldersAPI, usersAPI } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 import { X, Users, UserCheck } from 'lucide-react';
 
 interface FolderShareModalProps {
@@ -16,6 +17,7 @@ const FolderShareModal: React.FC<FolderShareModalProps> = ({
   onClose,
   onShare,
 }) => {
+  const { showToast } = useToast();
   const [departments, setDepartments] = useState<any[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
@@ -66,9 +68,10 @@ const FolderShareModal: React.FC<FolderShareModalProps> = ({
       }
       onShare();
       onClose();
-    } catch (error) {
+      showToast('success', 'Folder shared successfully');
+    } catch (error: any) {
       console.error('Error sharing folder:', error);
-      alert('Error sharing folder. Please try again.');
+      showToast('error', error.response?.data?.message || 'Failed to share folder');
     }
   };
 
