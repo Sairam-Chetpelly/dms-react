@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { MessageCircle, Send, X, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MessageCircle, Send, X, FileText, Settings } from 'lucide-react';
 import axios from 'axios';
 
 interface ChatResult {
@@ -24,15 +24,41 @@ interface Message {
   results?: ChatResult[];
 }
 
+interface AIModel {
+  id: string;
+  name: string;
+  provider: string;
+}
+
 const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [pdfModal, setPdfModal] = useState<{isOpen: boolean, url: string, name: string}>({isOpen: false, url: '', name: ''});
   const [messages, setMessages] = useState<Message[]>([
-    { type: 'bot', content: 'Hi! I can help you search through your PDF documents. What would you like to find?' }
+    { type: 'bot', content: 'Hi! I can help you search through your PDF documents and answer questions using AI. What would you like to find?' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [currentQuery, setCurrentQuery] = useState('');
+  const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
+  const [selectedModel, setSelectedModel] = useState('gemini-flash');
+  const [showSettings, setShowSettings] = useState(false);
+
+  useEffect(() => {
+    fetchAvailableModels();
+  }, []);
+
+  const fetchAvailableModels = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/chatbot/models`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAvailableModels(response.data.models);
+    } catch (error) {
+      console.error('Failed to fetch AI models:', error);
+    }
+  };
 
   const highlightText = (text: string, query: string) => {
     if (!query) return text;
@@ -76,7 +102,7 @@ const Chatbot: React.FC = () => {
       // Fallback to AI chatbot
       const chatResponse = await axios.post(
         `${process.env.REACT_APP_API_URL}/chatbot/chat`,
-        { message: userMessage },
+        { message: userMessage, model: selectedModel },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -116,16 +142,41 @@ const Chatbot: React.FC = () => {
           className="fixed bottom-20 right-6 w-80 h-96 bg-white border border-gray-300 rounded-lg shadow-xl flex flex-col z-50"
           style={{ position: 'fixed', bottom: '80px', right: '24px', zIndex: 9999, display: 'flex' }}
         >
-          <div className="bg-blue-600 text-black p-4 rounded-t-lg">
-            <h3 className="font-semibold">PDF Search Assistant</h3>
+          <div className="bg-blue-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+            <h3 className="font-semibold">AI Assistant</h3>
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="text-white hover:text-gray-200 transition-colors"
+            >
+              <Settings size={18} />
+            </button>
           </div>
+
+          {showSettings && (
+            <div className="bg-gray-50 p-3 border-b">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                AI Model:
+              </label>
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="w-full px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {availableModels.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name} ({model.provider})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto p-3 space-y-2" style={{ maxHeight: '280px' }}>
             {messages.map((message, index) => (
               <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[250px] px-2 rounded-lg text-sm ${
+                <div className={`max-w-[250px] px-3 py-2 rounded-lg text-sm ${
                   message.type === 'user' 
-                    ? 'bg-blue-600 text-black' 
+                    ? 'bg-blue-600 text-white' 
                     : 'bg-gray-100 text-gray-800'
                 }`}>
                   <p className="text-sm">{message.content}</p>
@@ -192,7 +243,7 @@ const Chatbot: React.FC = () => {
               <button
                 onClick={sendMessage}
                 disabled={loading || !input.trim()}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-black p-2 rounded-lg transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white p-2 rounded-lg transition-colors"
               >
                 <Send size={16} />
               </button>
