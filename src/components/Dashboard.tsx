@@ -13,7 +13,9 @@ import AdminPanel from './AdminPanel';
 import Chatbot from './Chatbot';
 import FolderCreateModal from './FolderCreateModal';
 import FolderShareModal from './FolderShareModal';
-import { Search, Upload, LogOut, User, Settings, Menu, MoreVertical } from 'lucide-react';
+import PdfSplitModal from './PdfSplitModal';
+import PdfMergeModal from './PdfMergeModal';
+import { Search, Upload, LogOut, User, Settings, Menu, MoreVertical, Merge } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -32,6 +34,8 @@ const Dashboard: React.FC = () => {
   const [viewDocument, setViewDocument] = useState<Document | null>(null);
   const [showFolderCreateModal, setShowFolderCreateModal] = useState(false);
   const [shareFolderData, setShareFolderData] = useState<any>(null);
+  const [splitPdfDocument, setSplitPdfDocument] = useState<Document | null>(null);
+  const [showPdfMergeModal, setShowPdfMergeModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
@@ -157,6 +161,10 @@ const Dashboard: React.FC = () => {
     setViewDocument(document);
   };
 
+  const handleSplitPdf = (document: Document) => {
+    setSplitPdfDocument(document);
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Mobile sidebar overlay */}
@@ -232,13 +240,22 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Upload Button - Hide for certain filters and restricted folders */}
               {!['starred', 'shared', 'admin', 'invoices'].includes(currentFilter) && canUploadToCurrentFolder && (
-                <button
-                  onClick={() => setShowUploadModal(true)}
-                  className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm"
-                >
-                  <Upload className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Upload</span>
-                </button>
+                <>
+                  <button
+                    onClick={() => setShowUploadModal(true)}
+                    className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    <Upload className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Upload</span>
+                  </button>
+                  <button
+                    onClick={() => setShowPdfMergeModal(true)}
+                    className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-sm"
+                  >
+                    <Merge className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Merge PDFs</span>
+                  </button>
+                </>
               )}
               
               {/* Desktop Menu Items */}
@@ -350,7 +367,9 @@ const Dashboard: React.FC = () => {
               onDownload={handleDownload}
               onShare={handleShare}
               onView={handleView}
+              onSplitPdf={handleSplitPdf}
               accessRestricted={accessRestricted}
+              currentUserId={user?._id || user?.id}
             />
           )}
         </main>
@@ -396,6 +415,21 @@ const Dashboard: React.FC = () => {
           loadDocuments();
           setFolderRefreshTrigger(prev => prev + 1);
         }}
+      />
+      
+      <PdfSplitModal
+        document={splitPdfDocument}
+        isOpen={!!splitPdfDocument}
+        onClose={() => setSplitPdfDocument(null)}
+        onSplit={loadDocuments}
+      />
+      
+      <PdfMergeModal
+        isOpen={showPdfMergeModal}
+        onClose={() => setShowPdfMergeModal(false)}
+        onMerge={loadDocuments}
+        currentFolder={currentFolder}
+        currentFilter={currentFilter}
       />
       
       <Chatbot />

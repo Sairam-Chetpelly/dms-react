@@ -33,6 +33,12 @@ export const documentsAPI = {
   delete: (id: string) => api.delete(`/documents/${id}`),
   download: (id: string) => api.get(`/documents/${id}/download`, { responseType: 'blob' }),
   getViewUrl: (id: string) => `${API_BASE_URL}/documents/${id}/view`,
+  splitPdf: (id: string, ranges: string) =>
+    api.post(`/documents/${id}/split`, { ranges }),
+  mergePdfs: (pdfIds: string[], fileName: string, folder?: string | null) =>
+    api.post('/documents/merge', { pdfIds, fileName, folder }),
+  mergePages: (pages: {pdfId: string, pageNum: number, pdfName: string}[], fileName: string, folder?: string | null) =>
+    api.post('/documents/merge-pages', { pages, fileName, folder }),
 };
 
 export const invoicesAPI = {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Document } from '../types';
-import { Star, Download, Trash2, FileText, Image, Video, Music, Share, Eye } from 'lucide-react';
+import { Star, Download, Trash2, FileText, Image, Video, Music, Share, Eye, Scissors } from 'lucide-react';
 
 interface DocumentGridProps {
   documents: Document[];
@@ -9,7 +9,9 @@ interface DocumentGridProps {
   onDownload: (id: string) => void;
   onShare: (document: Document) => void;
   onView: (document: Document) => void;
+  onSplitPdf?: (document: Document) => void;
   accessRestricted?: boolean;
+  currentUserId?: string;
 }
 
 const DocumentGrid: React.FC<DocumentGridProps> = ({
@@ -19,7 +21,9 @@ const DocumentGrid: React.FC<DocumentGridProps> = ({
   onDownload,
   onShare,
   onView,
+  onSplitPdf,
   accessRestricted = false,
+  currentUserId,
 }) => {
   const getFileIcon = (mimeType?: string) => {
     if (!mimeType) return <FileText className="w-8 h-8" />;
@@ -96,6 +100,15 @@ const DocumentGrid: React.FC<DocumentGridProps> = ({
               >
                 <Download className="w-4 h-4" />
               </button>
+              {document.mimeType === 'application/pdf' && onSplitPdf && (
+                <button
+                  onClick={() => onSplitPdf(document)}
+                  className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-orange-600 transition-all"
+                  title="Split PDF"
+                >
+                  <Scissors className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={() => onDelete(document._id)}
                 className="p-2 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all"
