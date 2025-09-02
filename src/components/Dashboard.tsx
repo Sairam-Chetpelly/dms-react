@@ -10,7 +10,7 @@ import ShareModal from './ShareModal';
 import FileViewModal from './FileViewModal';
 import InvoiceTable from './InvoiceTable';
 import AdminPanel from './AdminPanel';
-import Chatbot from './Chatbot';
+import EnhancedChatbot from './EnhancedChatbot';
 import FolderCreateModal from './FolderCreateModal';
 import FolderShareModal from './FolderShareModal';
 import PdfSplitModal from './PdfSplitModal';
@@ -432,7 +432,7 @@ const Dashboard: React.FC = () => {
         currentFilter={currentFilter}
       />
       
-      <Chatbot />
+      <EnhancedChatbot />
     </div>
   );
 };

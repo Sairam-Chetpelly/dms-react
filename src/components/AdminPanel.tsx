@@ -4,8 +4,9 @@ import { adminAPI, Department } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import EmployeeModal from './EmployeeModal';
 import DepartmentModal from './DepartmentModal';
+import AIManagement from './AIManagement';
 import Pagination from './Pagination';
-import { Plus, Edit, Trash2, Users, Building } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Building, Brain } from 'lucide-react';
 
 const AdminPanel: React.FC = () => {
   const { showToast } = useToast();
@@ -15,7 +16,7 @@ const AdminPanel: React.FC = () => {
   const [editingEmployee, setEditingEmployee] = useState<User | null>(null);
   const [showDepartmentModal, setShowDepartmentModal] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
-  const [activeTab, setActiveTab] = useState<'employees' | 'departments'>('employees');
+  const [activeTab, setActiveTab] = useState<'employees' | 'departments' | 'ai'>('employees');
   
   // Pagination states
   const [employeePage, setEmployeePage] = useState(1);
@@ -96,6 +97,17 @@ const AdminPanel: React.FC = () => {
           >
             <Building className="w-4 h-4 inline mr-2" />
             Departments
+          </button>
+          <button
+            onClick={() => setActiveTab('ai')}
+            className={`py-2 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
+              activeTab === 'ai'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Brain className="w-4 h-4 inline mr-2" />
+            AI Management
           </button>
         </nav>
       </div>
@@ -277,6 +289,10 @@ const AdminPanel: React.FC = () => {
             />
           </div>
         </div>
+      )}
+
+      {activeTab === 'ai' && (
+        <AIManagement />
       )}
       
       <EmployeeModal
